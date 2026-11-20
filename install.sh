@@ -49,8 +49,11 @@ chmod 644 "$PLUGIN_DIR/plugin.py" "$PLUGIN_DIR/online_web_control.py" "$PLUGIN_D
 
 # Keep existing credentials; otherwise create a unique password on this receiver.
 if [ ! -s "$AUTH_FILE" ]; then
-    AUTH_PASS="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-    [ -n "$AUTH_PASS" ] || { echo "ERROR: could not generate a password"; exit 1; }
+    AUTH_PASS="$("$PYTHON_BIN" -c 'import binascii, os; print(binascii.hexlify(os.urandom(24)).decode("ascii"))' 2>/dev/null)"
+    case "$AUTH_PASS" in
+        ""|*[!0-9a-f]*) echo "ERROR: secure password generation failed. No credentials were written."; exit 1 ;;
+    esac
+    [ "${#AUTH_PASS}" -eq 48 ] || { echo "ERROR: generated password has an invalid length. No credentials were written."; exit 1; }
     {
         echo "online4tech"
         echo "$AUTH_PASS"

@@ -81,22 +81,45 @@ def stop_server():
 
 
 
-def main(session, **kwargs):
-    """Start the local web panel without creating a custom Enigma2 screen."""
-    start_server()
+
+def _show_result(session, text):
     try:
         from Screens.MessageBox import MessageBox
-        ip = get_ip()
-        message = (
-            "Online Web Control\n\n"
-            "لوحة التحكم قيد التشغيل أو جاري تشغيلها.\n"
-            "افتح من متصفح جهازك داخل نفس الشبكة:\n\n"
-            "http://%s:%d\n\n"
-            "الاستخدام داخل الشبكة المحلية فقط."
-        ) % (ip, PORT)
-        session.open(MessageBox, message, MessageBox.TYPE_INFO, timeout=12)
+        session.open(MessageBox, text, MessageBox.TYPE_INFO, timeout=8)
     except Exception as error:
-        print("[OnlineWebControl] Could not show status message: %s" % error)
+        print("[OnlineWebControl] %s" % error)
+
+
+def _menu_choice(session, choice):
+    if not choice:
+        return
+    action = choice[1] if isinstance(choice, (tuple, list)) and len(choice) > 1 else choice
+    if action == "start":
+        start_server()
+        _show_result(session, "تم إرسال أمر تشغيل لوحة Online Web Control.\\n\\nالرابط: http://%s:%d" % (get_ip(), PORT))
+    elif action == "stop":
+        stop_server()
+        _show_result(session, "تم إرسال أمر إيقاف لوحة Online Web Control.")
+
+
+def main(session, **kwargs):
+    """Show safe native Enigma2 start/stop choices; no custom skin."""
+    try:
+        from Screens.ChoiceBox import ChoiceBox
+        state = "قيد التشغيل" if is_running() else "متوقفة"
+        choices = [
+            ("▶ تشغيل لوحة الويب", "start"),
+            ("■ إيقاف لوحة الويب", "stop"),
+        ]
+        session.openWithCallback(
+            lambda choice: _menu_choice(session, choice),
+            ChoiceBox,
+            title="Online Web Control - الحالة: %s" % state,
+            list=choices
+        )
+    except Exception as error:
+        print("[OnlineWebControl] ChoiceBox error: %s" % error)
+        _show_result(session, "تعذر فتح قائمة التحكم: %s" % error)
 
 
 

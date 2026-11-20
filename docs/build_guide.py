@@ -90,19 +90,34 @@ def code(lines):
 
 # رأس الصفحة
 c.setFillColor(DARK)
-c.roundRect(MX, y - 62, W - 2 * MX, 78, 8, stroke=0, fill=1)
+c.roundRect(MX, y - 74, W - 2 * MX, 90, 8, stroke=0, fill=1)
 c.setFillColor(GOLD)
-c.rect(MX, y - 62, W - 2 * MX, 3, stroke=0, fill=1)
+c.rect(MX, y - 74, W - 2 * MX, 3, stroke=0, fill=1)
+parts = (("online", white), ("4", GOLD), ("tech", white))
+tw = sum(pdfmetrics.stringWidth(p, "B", 26) for p, _ in parts)
+bx = W / 2 - (tw + 46) / 2
+c.setFillColor(GOLD)
+c.roundRect(bx, y - 22, 34, 34, 8, stroke=0, fill=1)
+c.setFillColor(DARK)
 c.setFont("B", 24)
-c.drawCentredString(W / 2, y - 14, "Online Web Control")
+c.drawCentredString(bx + 17, y - 14, "4")
+xx = bx + 46
+for ptxt, col in parts:
+    c.setFillColor(col)
+    c.setFont("B", 26)
+    c.drawString(xx, y - 14, ptxt)
+    xx += pdfmetrics.stringWidth(ptxt, "B", 26)
+c.setFillColor(GOLD)
+c.setFont("B", 13)
+c.drawCentredString(W / 2, y - 42, "Online Web Control")
 c.setFillColor(HexColor("#cfcfcf"))
-c.setFont("R", 11)
-c.drawCentredString(W / 2, y - 40, sh("لوحة تحكم ويب لرسيفر Enigma2 - بورت 7070"))
-y -= 90
+c.setFont("R", 10)
+c.drawCentredString(W / 2, y - 60, sh("لوحة تحكم ويب لرسيفر Enigma2 - بورت 7070"))
+y -= 104
 
 heading("التثبيت بأمر واحد")
 para("افتح تيرمنال الرسيفر (Telnet / SSH) والصق الأمر. الرسيفر هيعمل ريستارت للواجهة بعد التثبيت:")
-code(["wget -qO- https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/install.sh | sh"])
+code(["wget -qO- https://raw.githubusercontent.com/online4tech/webcontrol1/main/install.sh | sh"])
 
 heading("التثبيت بملف ipk")
 step(1, "حمّل ملف الـ ipk من مجلد dist في الريبو.")
@@ -113,11 +128,10 @@ code(["opkg install /tmp/enigma2-plugin-extensions-onlinewebcontrol_all.ipk", "k
 heading("تشغيل اللوحة")
 step(1, "من قائمة البلجنات افتح Online Web Control.")
 step(2, "هتلاقي الـ IP والبورت 7070 وحالة التشغيل.")
-step(3, "اضغط الزر الأخضر للتشغيل.")
+step(3, "اضغط الزر الأخضر لفتح اللوحة، والأحمر لقفلها (زر OK يبدّل بينهم).")
 y -= 2
 x = W - MX
-for color, label in ((HexColor("#16a34a"), "أخضر: تشغيل"), (HexColor("#dc2626"), "أحمر: إيقاف"),
-                     (HexColor("#d49b00"), "أصفر: تشغيل تلقائي"), (HexColor("#2563eb"), "أزرق: تحديث")):
+for color, label in ((HexColor("#16a34a"), "أخضر: فتح"), (HexColor("#dc2626"), "أحمر: قفل")):
     w = pdfmetrics.stringWidth(sh(label), "B", 9) + 20
     c.setFillColor(color)
     c.roundRect(x - w, y - 5, w, 20, 4, stroke=0, fill=1)
@@ -130,7 +144,7 @@ y -= 28
 heading("فتح الصفحة")
 para("من أي جهاز على نفس الشبكة افتح المتصفح على العنوان التالي:")
 code(["http://IP-RECEIVER:7070"])
-para("اسم المستخدم وكلمة المرور الافتراضيان: admin / admin")
+para("كل التحكم جوه الصفحة. اسم المستخدم وكلمة المرور الافتراضيان: admin / admin")
 
 heading("أقسام الصفحة")
 bullet("التحكم السريع: ريستارت الإيمو والواجهة والرسيفر وتحديث اللوحة.")
@@ -148,5 +162,5 @@ para("مهم: الصفحة فيها تيرمنال بصلاحيات root. غيّ
 
 c.setFillColor(HexColor("#777777"))
 c.setFont("R", 9)
-c.drawCentredString(W / 2, 28, "Powered by Online4Tech  |  github.com/YOUR_USER/OnlineWebControl")
+c.drawCentredString(W / 2, 28, "Powered by Online4Tech  |  github.com/online4tech/webcontrol1")
 c.save()

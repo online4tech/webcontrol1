@@ -21,19 +21,9 @@ from socketserver import ThreadingMixIn
 # ==========================================================
 PORT = int(os.environ.get("ONLINE_WEB_PORT", "7070"))
 
-# بيانات الدخول تُقرأ من ملف محلي لا يُرفع إلى GitHub.
-# ملف التثبيت ينشئ كلمة مرور عشوائية خاصة بكل رسيفر.
-AUTH_FILE = "/etc/enigma2/online_web_control.auth"
-AUTH_USER = "online4tech"
-AUTH_PASS = "INSTALL_REQUIRED"
-try:
-    with open(AUTH_FILE, "r") as _auth_file:
-        _auth_lines = _auth_file.read().splitlines()
-    if len(_auth_lines) >= 2 and _auth_lines[0].strip() and _auth_lines[1].strip():
-        AUTH_USER = _auth_lines[0].strip()
-        AUTH_PASS = _auth_lines[1].strip()
-except Exception:
-    pass
+# حماية الدخول (غيّر البيانات دي). سيبها فاضية "" لو عايز تلغي الحماية
+AUTH_USER = "admin"
+AUTH_PASS = "admin"
 
 # روابط الأزرار السفلية (حط روابطك هنا)
 SUPPORT_URL = "#"
@@ -99,8 +89,27 @@ def get_ip():
         return "127.0.0.1"
 
 
+def active_emu():
+    names = (("oscam", "OSCam"), ("ncam", "NCam"), ("cccam", "CCcam"))
+    try:
+        for pid in os.listdir("/proc"):
+            if not pid.isdigit():
+                continue
+            try:
+                with open("/proc/%s/comm" % pid) as f:
+                    comm = f.read().strip().lower()
+            except Exception:
+                continue
+            for key, label in names:
+                if key in comm:
+                    return label
+    except Exception:
+        pass
+    return None
+
+
 def get_stats():
-    st = {"ip": get_ip(), "port": PORT, "model": "Enigma2"}
+    st = {"ip": get_ip(), "port": PORT, "model": "Enigma2", "emu": active_emu()}
     try:
         mem = {}
         with open("/proc/meminfo") as f:
@@ -149,73 +158,84 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Online Web Control</title>
+<title>online4tech | Web Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 46'%3E%3Crect width='46' height='46' rx='11' fill='%23f5b800'/%3E%3Ctext x='23' y='34' text-anchor='middle' font-size='30' font-weight='800' font-family='Arial,sans-serif' fill='%23111'%3E4%3C/text%3E%3C/svg%3E">
 <style>
   :root {
-    --bg: #070707;
-    --card: #121212;
-    --line: #2b2410;
-    --gold: #f5b800;
-    --gold-soft: rgba(245,184,0,.14);
+    --bg: #090806;
+    --card: #12110e;
+    --line: #272210;
+    --gold: #f2c230;
+    --gold-soft: rgba(242,194,48,.12);
+    --gold-line: rgba(242,194,48,.32);
     --text: #f4f1e8;
-    --muted: #8d887a;
-    --field: #0a0a0a;
-    --field-line: #2a2a2a;
+    --muted: #a39d8a;
+    --field: #0b0b0a;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
-  body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 14px 12px 28px; }
+  html { background: #090806; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
+  body { background: radial-gradient(circle at 50% -8%, #1d1807 0%, var(--bg) 52%); background-attachment: fixed; color: var(--text); min-height: 100vh; padding: 14px 12px 30px; }
   .wrap { max-width: 560px; margin: 0 auto; }
 
-  .head { text-align: center; padding: 14px 10px 4px; }
-  .head h1 { font-size: 1.05rem; color: var(--gold); font-weight: 700; line-height: 1.6; }
+  .head { text-align: center; background: #0c0b08; border: 1px solid var(--line); border-radius: 18px; padding: 16px 12px 14px; box-shadow: 0 8px 26px rgba(0,0,0,.45); }
+  .logo { display: flex; align-items: center; justify-content: center; gap: 11px; direction: ltr; margin-bottom: 10px; }
+  .logo svg { flex: none; }
+  .wm { font-size: 1.9rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); line-height: 1; }
+  .wm b { color: var(--gold); }
+  .head h1 { font-size: 1.05rem; color: var(--gold); font-weight: 700; line-height: 1.7; }
 
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 16px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-  .stat .k { font-size: .72rem; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
-  .stat .v { font-size: 1.05rem; font-weight: 700; margin-top: 4px; direction: ltr; text-align: right; }
-  .ok { color: #34d399; } .warn { color: #fbbf24; } .bad { color: #f87171; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  .stat .k { font-size: .76rem; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+  .stat .v { white-space: nowrap; font-size: .95rem; font-weight: 800; margin-top: 6px; direction: ltr; text-align: right; color: var(--gold); }
+  .stat .v.ok { color: #34d399; } .stat .v.warn { color: #fbbf24; } .stat .v.bad { color: #f4476b; }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 14px; margin-bottom: 16px; }
-  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
-  .card-title { font-size: 1rem; font-weight: 700; }
-  .badge { font-size: .68rem; color: var(--gold); border: 1px solid var(--gold); background: var(--gold-soft); border-radius: 8px; padding: 3px 9px; text-align: center; line-height: 1.3; white-space: nowrap; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px; margin-bottom: 16px; box-shadow: 0 8px 26px rgba(0,0,0,.4); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .card-title { font-size: 1.1rem; font-weight: 800; color: var(--gold); line-height: 1.6; }
+  .badge { font-size: .68rem; font-weight: 700; color: var(--gold); border: 1px solid var(--gold-line); background: var(--gold-soft); border-radius: 20px; padding: 5px 12px; text-align: center; line-height: 1.35; white-space: nowrap; flex: none; direction: ltr; }
 
-  .stack { display: flex; flex-direction: column; gap: 10px; }
-  .btn { border: 0; border-radius: 10px; padding: 14px 12px; font-size: .95rem; font-weight: 700; color: #fff; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: filter .15s, transform .1s; }
-  .btn:hover { filter: brightness(1.12); }
+  .stack { display: flex; flex-direction: column; gap: 11px; }
+  .btn { border: 0; border-radius: 14px; padding: 16px 12px; font-size: .98rem; font-weight: 700; color: #fff; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; line-height: 1.5; box-shadow: 0 4px 14px rgba(0,0,0,.4); transition: filter .15s, transform .1s; }
+  .btn:hover { filter: brightness(1.1); }
   .btn:active { transform: scale(.985); }
   .btn:disabled { opacity: .55; cursor: not-allowed; }
-  .b-yellow { background: #e8b400; color: #1a1400; }
-  .b-blue   { background: #0a6fb0; }
-  .b-red    { background: #d4143c; }
-  .b-teal   { background: #0f9f8a; }
-  .b-indigo { background: #4338ca; }
-  .b-violet { background: #7c3aed; }
-  .b-sky    { background: #0284c7; }
-  .b-emerald{ background: #059669; }
-  .b-rose   { background: #be123c; }
-  .b-gray   { background: #3a3a3a; }
-  .b-amber  { background: #e8a200; color: #1a1400; }
-  .b-green  { background: #16a34a; }
-  .b-cyan   { background: #0891b2; }
-  .b-oscam  { background: #1d4ed8; }
-  .b-ncam   { background: #7c3aed; }
+  .b-yellow { background: linear-gradient(135deg,#d9a92a,#f4cd4f); color: #1a1400; }
+  .b-blue   { background: linear-gradient(135deg,#0a6fa8,#1593d6); }
+  .b-red    { background: linear-gradient(135deg,#c20f33,#e8264d); }
+  .b-green  { background: linear-gradient(135deg,#0d9468,#17b57d); }
+  .b-teal   { background: linear-gradient(135deg,#0e8a7c,#14a691); }
+  .b-indigo { background: linear-gradient(135deg,#3b38c4,#5b52e6); }
+  .b-violet { background: linear-gradient(135deg,#6d28d9,#8b5cf6); }
+  .b-sky    { background: linear-gradient(135deg,#0b7cc0,#1ea0e6); }
+  .b-emerald{ background: linear-gradient(135deg,#0a8f5b,#10b06f); }
+  .b-rose   { background: linear-gradient(135deg,#c2113a,#e5294f); }
+  .b-amber  { background: linear-gradient(135deg,#d97706,#f59e0b); }
+  .b-oscam  { background: linear-gradient(135deg,#1e40af,#2f63e0); }
+  .b-ncam   { background: linear-gradient(135deg,#6d28d9,#8b5cf6); }
+  .b-gray   { background: linear-gradient(135deg,#333335,#48484a); }
 
-  .hint { font-size: .78rem; color: var(--muted); line-height: 1.6; margin: 2px 0 10px; }
-  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 11px; }
-  .field label { font-size: .78rem; color: var(--muted); }
-  input, textarea { background: var(--field); border: 1px solid var(--field-line); border-radius: 9px; padding: 12px; color: #fff; font-size: .9rem; direction: ltr; text-align: left; width: 100%; }
+  .hint { font-size: .8rem; color: var(--muted); line-height: 1.7; margin: 2px 0 10px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field label { font-size: .82rem; color: var(--text); font-weight: 600; }
+  input, textarea { background: var(--field); border: 1px solid #1b1b19; border-radius: 10px; padding: 14px 12px; color: #fff; font-size: .9rem; direction: ltr; text-align: left; width: 100%; }
+  input::placeholder, textarea::placeholder { color: #5a5850; }
   input:focus, textarea:focus { outline: 2px solid var(--gold); outline-offset: 0; border-color: var(--gold); }
-  textarea { font-family: 'Courier New', monospace; min-height: 80px; resize: vertical; }
-  .row2 { display: flex; gap: 10px; }
+  textarea { font-family: 'Courier New', monospace; min-height: 84px; resize: vertical; }
+  .row2 { display: flex; gap: 11px; }
   .row2 .btn { flex: 1; }
 
-  .console { background: #030303; border: 1px solid #1d1d1d; border-radius: 10px; padding: 12px; font-family: 'Courier New', monospace; font-size: .82rem; color: #3ddc97; min-height: 150px; max-height: 340px; overflow-y: auto; direction: ltr; text-align: left; white-space: pre-wrap; line-height: 1.5; }
+  .console { background: #040404; border: 1px solid #161614; border-radius: 12px; padding: 14px; font-family: 'Courier New', monospace; font-size: .82rem; color: #9be3b9; min-height: 150px; max-height: 340px; overflow-y: auto; direction: ltr; text-align: left; white-space: pre-wrap; line-height: 1.55; }
 
-  .foot { text-align: center; margin-top: 6px; }
-  .foot .btn { text-decoration: none; margin-bottom: 10px; }
-  .foot .row2 a.btn { margin-bottom: 0; }
-  .power { color: var(--muted); font-size: .78rem; margin-top: 14px; direction: ltr; }
+  .foot { text-align: center; margin-top: 4px; }
+  .pill { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; font-size: .95rem; border-radius: 999px; padding: 14px 16px; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .pill b { color: var(--gold); }
+  .pill-green { background: linear-gradient(135deg,#15803d,#22b455); margin-bottom: 11px; }
+  .pill-green b { color: #fff; }
+  .pill-dark { flex: 1; background: #171613; border: 1px solid var(--line); }
+  .power { color: var(--muted); font-size: .76rem; margin-top: 14px; }
   .power b { color: var(--gold); }
   @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
 </style>
@@ -224,11 +244,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <div class="wrap">
 
   <div class="head">
+    <div class="logo" role="img" aria-label="online4tech">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><rect width="46" height="46" rx="11" fill="#f5b800"/><text x="23" y="34" text-anchor="middle" font-size="30" font-weight="800" font-family="Arial, sans-serif" fill="#111">4</text></svg>
+      <span class="wm">online<b>4</b>tech</span>
+    </div>
     <h1>لوحة التحكم المتكاملة لجهاز <span id="model">Enigma2</span> - Port %%PORT%%</h1>
   </div>
 
   <div class="stats">
-    <div class="stat"><div class="k"><span>الأيبي النشط</span><span>🌐</span></div><div class="v ok" id="s_ip">...</div></div>
+    <div class="stat"><div class="k"><span>الإيمو النشط</span><span>⚡</span></div><div class="v" id="s_emu">...</div></div>
     <div class="stat"><div class="k"><span>الذاكرة (RAM)</span><span>🧠</span></div><div class="v" id="s_ram">...</div></div>
     <div class="stat"><div class="k"><span>المساحة (Flash)</span><span>💾</span></div><div class="v" id="s_flash">...</div></div>
     <div class="stat"><div class="k"><span>حرارة المعالج</span><span>🌡️</span></div><div class="v" id="s_temp">...</div></div>
@@ -244,7 +268,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <button class="btn b-yellow" onclick="control('restart_emu','ريستارت الايمو',false)">🔄 ريستارت الايمو</button>
       <button class="btn b-blue"   onclick="control('restart_gui','ريستارت الواجهة',true)">🖥️ ريستارت الواجهة</button>
       <button class="btn b-red"    onclick="control('reboot','ريستارت الرسيفر',true)">⏻ ريستارت الرسيفر</button>
-      <button class="btn b-teal"   onclick="control('update_panel','تحديث اللوحة',true)">⬇️ تحديث اللوحة</button>
+      <button class="btn b-green"  onclick="control('update_panel','تحديث اللوحة',true)">⬇️ تحديث اللوحة</button>
     </div>
   </div>
 
@@ -258,13 +282,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <button class="btn b-indigo" onclick="installPlugin('xstreamity')">📦 تثبيت بلجن XStreamity</button>
       <button class="btn b-violet" onclick="installPlugin('xklass')">🎬 تثبيت بلجن XKlass</button>
     </div>
-    <div class="hint">الصق رابط M3U كامل مباشرة (سيقوم بتعبئة الحقول تلقائياً) أو استخدم الرابط الكامل.</div>
+    <div class="hint">الصق رابط M3U كامل مباشرة (سيقوم بتعبئة الحقول تلقائياً) أو استخدم الرابط الكامل مباشرة.</div>
     <div class="field"><input type="text" id="m3u" placeholder="http://server.com:8080/get.php?username=...&password=..." oninput="parseM3U(this.value)"></div>
     <div class="field"><label>رابط السيرفر (Host URL)</label><input type="text" id="iptv_host" placeholder="http://server.com:8080"></div>
     <div class="field"><label>اسم المستخدم (Username)</label><input type="text" id="iptv_user" placeholder="username"></div>
     <div class="field"><label>كلمة المرور (Password)</label><input type="text" id="iptv_pass" placeholder="password"></div>
     <div class="stack">
-      <button class="btn b-amber" onclick="iptvBouquet()">📡 إضافة ملف القنوات Live / VOD / (Series)</button>
+      <button class="btn b-yellow" onclick="iptvBouquet()">📡 إضافة ملف القنوات Live / VOD / (Series)</button>
       <button class="btn b-teal"  onclick="iptvSave()">💾 حفظ الاشتراك في XStreamity و XKlass</button>
     </div>
   </div>
@@ -336,12 +360,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <div class="foot">
-    <a class="btn b-green" href="%%SUPPORT%%" target="_blank" rel="noopener">💬 تواصل مع الدعم الفني Online4Tech</a>
+    <a class="pill pill-green" href="%%SUPPORT%%" target="_blank" rel="noopener">💬 تواصل مع الدعم الفني - Online4Tech</a>
     <div class="row2">
-      <a class="btn b-blue" href="%%SITE%%" target="_blank" rel="noopener">🌐 الموقع الرسمي</a>
-      <a class="btn b-indigo" href="%%STORE%%" target="_blank" rel="noopener">🛒 متجر Online4Tech</a>
+      <a class="pill pill-dark" href="%%STORE%%" target="_blank" rel="noopener">🛒 متجر <b>Online4Tech</b></a>
+      <a class="pill pill-dark" href="%%SITE%%" target="_blank" rel="noopener">🌐 الموقع الرسمي</a>
     </div>
-    <div class="power">Powered by <b>Online4Tech</b></div>
+    <div class="power">Powered by <b>Online4Tech</b> · أونلاين4تك للتكنولوجي</div>
   </div>
 </div>
 
@@ -375,21 +399,22 @@ HTML_PAGE = r"""<!DOCTYPE html>
   async function loadStats() {
     try {
       const s = await (await fetch('/api/stats')).json();
-      $('s_ip').textContent = s.ip + ' · متصل';
+      if (s.emu) { $('s_emu').textContent = s.emu; $('s_emu').className = 'v ok'; }
+      else { $('s_emu').textContent = 'متوقف'; $('s_emu').className = 'v bad'; }
       if (s.model) $('model').textContent = 'Enigma2';
       if (s.ram_pct !== undefined) {
         $('s_ram').textContent = s.ram_pct + '% (' + s.ram_used + '/' + s.ram_total + 'MB)';
-        $('s_ram').className = 'v ' + (s.ram_pct > 90 ? 'bad' : s.ram_pct > 75 ? 'warn' : 'ok');
+        $('s_ram').className = 'v ' + (s.ram_pct > 90 ? 'bad' : s.ram_pct > 75 ? 'warn' : '');
       }
       if (s.flash_pct !== undefined) {
         $('s_flash').textContent = s.flash_pct + '% (' + s.flash_free + ' free)';
-        $('s_flash').className = 'v ' + (s.flash_pct > 90 ? 'bad' : s.flash_pct > 75 ? 'warn' : 'ok');
+        $('s_flash').className = 'v ' + (s.flash_pct > 90 ? 'bad' : s.flash_pct > 75 ? 'warn' : '');
       }
       if (s.temp !== undefined) {
         $('s_temp').textContent = s.temp + '°C';
-        $('s_temp').className = 'v ' + (s.temp > 75 ? 'bad' : s.temp > 60 ? 'warn' : 'ok');
+        $('s_temp').className = 'v ' + (s.temp > 75 ? 'bad' : s.temp > 60 ? 'warn' : '');
       } else { $('s_temp').textContent = '--'; }
-    } catch (e) { $('s_ip').textContent = 'غير متصل'; $('s_ip').className = 'v bad'; }
+    } catch (e) { $('s_emu').textContent = 'غير متصل'; $('s_emu').className = 'v bad'; }
   }
   loadStats(); setInterval(loadStats, 5000);
 

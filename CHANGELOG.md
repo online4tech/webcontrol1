@@ -1,9 +1,12 @@
 # Changelog
 
 ## 1.1
-- Add direct Telnet installation from source without requiring an IPK.
-- Generate a unique local panel password during installation and preserve existing credentials on updates.
-- Update repository URLs and installation instructions.
+- البلجن بقى بسيط: فتح (تشغيل) وقفل (إيقاف) لوحة الويب فقط. تم حذف التشغيل التلقائي.
+- تصميم الصفحة مطابق للتصميم المرجعي (ألوان وأزرار وكروت وفوتر).
+- كارت «الإيمو النشط» بدل كارت الـ IP، ولوجو online4tech في الصفحة.
 
 ## 1.0
-- Initial Online Web Control release.
+- لوحة ويب بتصميم Online4Tech (بورت 7070) مع حماية دخول.
+- بلجن Online Web Control.
+- قسم IPTV (XStreamity / XKlass / باقات Live-VOD-Series).
+- التحكم السريع، الإيموهات، القنوات والبيكونات، CCcam، التيرمنال.

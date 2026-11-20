@@ -10,15 +10,15 @@
 💻 تيرمنال مباشر وسجل عمليات
 🌡️ شاشة حالة: IP والرام والفلاش والحرارة
 
-✅ بلجن بسيط في قائمة الرسيفر: تشغيل / إيقاف / تشغيل تلقائي
+✅ بلجن بسيط في قائمة الرسيفر: فتح وقفل اللوحة فقط
 
 📥 التثبيت: افتح تيرمنال الرسيفر والصق الأمر:
 
-wget -qO- https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/install.sh | sh
+wget -qO- https://raw.githubusercontent.com/online4tech/webcontrol1/main/install.sh | sh
 
 بعد ريستارت الواجهة: قائمة البلجنات ← Online Web Control ← الزر الأخضر ← افتح http://IP-الرسيفر:7070
 بيانات الدخول الافتراضية: admin / admin (غيّرها بعد أول دخول)
 
-🔗 الريبو وملف ipk: https://github.com/YOUR_USER/OnlineWebControl
+🔗 الريبو وملف ipk: https://github.com/online4tech/webcontrol1
 
 Powered by Online4Tech

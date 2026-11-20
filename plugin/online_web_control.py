@@ -8,6 +8,8 @@ import sys
 import json
 import base64
 import shutil
+import tempfile
+import time
 import socket
 import threading
 import subprocess
@@ -1382,7 +1384,7 @@ def _safe_extract_picons(archive_path, destination, flatten=False):
             if normalized.startswith("..") or os.path.isabs(normalized):
                 continue
             target = os.path.join(destination, normalized)
-            if not os.path.commonpath([os.path.realpath(destination), os.path.realpath(os.path.dirname(target))]).startswith(os.path.realpath(destination)):
+            if os.path.commonpath([os.path.realpath(destination), os.path.realpath(os.path.dirname(target))]) != os.path.realpath(destination):
                 continue
             os.makedirs(os.path.dirname(target), exist_ok=True)
             with archive.open(item, "r") as source, open(target, "wb") as output:

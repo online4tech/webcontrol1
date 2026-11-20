@@ -94,14 +94,25 @@ def _show_result(session, message, timeout=6):
 
 
 def _restart_gui_later():
+    """Restart Enigma2 gracefully and allow enough time for the GUI to stop."""
     try:
-        subprocess.Popen(
-            ["/bin/sh", "-c", "sleep 6; init 4; sleep 3; init 3"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL, close_fds=True
+        command = (
+            "sleep 8; "
+            "init 4; "
+            "n=0; "
+            "while pidof enigma2 >/dev/null 2>&1 && [ \\"$n\\" -lt 30 ]; do "
+            "sleep 1; n=$((n + 1)); "
+            "done; "
+            "sleep 3; "
+            "init 3"
         )
-    except Exception:
-        pass
+        subprocess.Popen(
+            ["/bin/sh", "-c", command],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL, close_fds=True, start_new_session=True
+        )
+    except Exception as error:
+        print("[OnlineWebControl] GUI restart scheduling failed: %s" % error)
 
 
 def update_plugin(session):

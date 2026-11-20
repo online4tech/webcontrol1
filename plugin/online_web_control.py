@@ -803,7 +803,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     </div>
     <div class="stack">
       <button class="btn b-yellow" onclick="iptvBouquet()">📡 إضافة ملف القنوات Live / VOD / (Series)</button>
-      <button class="btn b-teal"  onclick="iptvSave()">💾 حفظ الاشتراك في XStreamity و XKlass</button>
+      <button class="btn b-teal"  onclick="iptvSave()">💾 حفظ الاشتراك في الإضافات المكتشفة</button>
     </div>
   </div>
 

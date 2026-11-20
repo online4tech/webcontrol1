@@ -94,26 +94,16 @@ def _show_result(session, message, timeout=6):
 
 
 def _restart_gui_later():
-    """Restart Enigma2 gracefully and allow enough time for the GUI to stop."""
+    """Restart only the Enigma2 GUI with a safe stop/start delay."""
     try:
-        command = (
-            "sleep 8; "
-            "init 4; "
-            "n=0; "
-            "while pidof enigma2 >/dev/null 2>&1 && [ \"$n\" -lt 30 ]; do "
-            "sleep 1; n=$((n + 1)); "
-            "done; "
-            "sleep 3; "
-            "init 3"
-        )
+        command = "sleep 8; init 4; sleep 12; init 3"
         subprocess.Popen(
             ["/bin/sh", "-c", command],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL, close_fds=True, start_new_session=True
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True
         )
     except Exception as error:
         print("[OnlineWebControl] GUI restart scheduling failed: %s" % error)
-
 
 def update_plugin(session):
     """Fetch and safely install the latest plugin files from the official GitHub repo."""
@@ -258,7 +248,7 @@ class OnlineWebControlScreen(Screen):
         self["hint"] = Label("استخدم أزرار الألوان في الريموت للتحكم")
         self["green"] = Label("●  تشغيل اللوحة")
         self["red"] = Label("■  إيقاف اللوحة")
-        self["yellow"] = Label("↻  تحديث البلجن")
+        self["yellow"] = Label("↻  تحديث + إعادة تشغيل الواجهة")
         self["footer"] = Label("OK: تحديث الحالة     |     EXIT: خروج     |     التحديث من GitHub الرسمي")
         self["actions"] = ActionMap(
             ["ColorActions", "OkCancelActions"],

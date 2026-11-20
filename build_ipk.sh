@@ -17,7 +17,7 @@ Architecture: all
 Section: extra
 Priority: optional
 Maintainer: Online4Tech
-Homepage: https://github.com/YOUR_USER/OnlineWebControl
+Homepage: https://github.com/online4tech/webcontrol1
 Description: Online Web Control - Enigma2 web panel (port 7070) with start/stop plugin
 EOT
 

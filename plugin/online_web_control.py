@@ -680,6 +680,27 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .row2 { gap: 8px; }
   }
 
+
+  /* Compact subscription fields: keep paste/import fields full width */
+  .compact-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+  }
+  .compact-fields .field { min-width: 0; margin-bottom: 10px; gap: 4px; }
+  .compact-fields .field label { font-size: .76rem; }
+  .compact-fields input { min-width: 0; padding: 9px 10px; min-height: 40px; font-size: .84rem; }
+  .cccam-fields { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 980px) {
+    .cccam-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .compact-fields, .cccam-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .compact-fields .field { margin-bottom: 7px; }
+    .compact-fields input { padding: 8px; min-height: 38px; font-size: .8rem; }
+  }
+
 </style>
 </head>
 <body>
@@ -727,9 +748,11 @@ HTML_PAGE = r"""<!DOCTYPE html>
     </div>
     <div class="hint">الصق رابط M3U كامل مباشرة (سيقوم بتعبئة الحقول تلقائياً) أو استخدم الرابط الكامل مباشرة.</div>
     <div class="field"><input type="text" id="m3u" placeholder="http://server.com:8080/get.php?username=...&password=..." oninput="parseM3U(this.value)"></div>
-    <div class="field"><label>رابط السيرفر (Host URL)</label><input type="text" id="iptv_host" placeholder="http://server.com:8080"></div>
-    <div class="field"><label>اسم المستخدم (Username)</label><input type="text" id="iptv_user" placeholder="username"></div>
-    <div class="field"><label>كلمة المرور (Password)</label><input type="text" id="iptv_pass" placeholder="password"></div>
+    <div class="compact-fields iptv-fields">
+      <div class="field"><label>رابط السيرفر (Host URL)</label><input type="text" id="iptv_host" placeholder="http://server.com:8080"></div>
+      <div class="field"><label>اسم المستخدم (Username)</label><input type="text" id="iptv_user" placeholder="username"></div>
+      <div class="field"><label>كلمة المرور (Password)</label><input type="text" id="iptv_pass" placeholder="password"></div>
+    </div>
     <div class="stack">
       <button class="btn b-yellow" onclick="iptvBouquet()">📡 إضافة ملف القنوات Live / VOD / (Series)</button>
       <button class="btn b-teal"  onclick="iptvSave()">💾 حفظ الاشتراك في XStreamity و XKlass</button>
@@ -770,10 +793,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
     </div>
     <div class="hint">لصق سطر السيسكام كاملاً (اختياري - سيقوم بتعبئة الحقول تلقائياً):</div>
     <div class="field"><input type="text" id="raw_cline" placeholder="C: server.example.com 12000 username password" oninput="parseCline(this.value)"></div>
-    <div class="field"><label>الهوست (Host / Server)</label><input type="text" id="host" placeholder="example.ddns.net"></div>
-    <div class="field"><label>البورت (Port)</label><input type="text" id="port" placeholder="12000"></div>
-    <div class="field"><label>اسم المستخدم (User)</label><input type="text" id="user" placeholder="user123"></div>
-    <div class="field"><label>كلمة المرور (Password)</label><input type="text" id="pass" placeholder="pass123"></div>
+    <div class="compact-fields cccam-fields">
+      <div class="field"><label>الهوست (Host / Server)</label><input type="text" id="host" placeholder="example.ddns.net"></div>
+      <div class="field"><label>البورت (Port)</label><input type="text" id="port" placeholder="12000"></div>
+      <div class="field"><label>اسم المستخدم (User)</label><input type="text" id="user" placeholder="user123"></div>
+      <div class="field"><label>كلمة المرور (Password)</label><input type="text" id="pass" placeholder="pass123"></div>
+    </div>
     <div class="stack">
       <button class="btn b-green"  onclick="saveSub('cccam_etc')">📄 حفظ في /etc/CCcam.cfg</button>
       <button class="btn b-teal"   onclick="saveSub('cccam_tuxbox')">📂 حفظ في /etc/tuxbox/config/CCcam.cfg</button>

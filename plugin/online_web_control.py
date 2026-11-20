@@ -718,6 +718,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .catalog-dialog .card-head { margin-bottom:12px; }
   .catalog-toolbar { display:flex; gap:9px; align-items:center; margin-bottom:12px; }
   .catalog-toolbar input { flex:1; min-width:0; }
+  .catalog-shortcuts { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 12px; }
+  .catalog-shortcuts .btn { flex:1; min-width:145px; min-height:38px; padding:7px 9px; font-size:.8rem; }
   .catalog-layout { display:grid; grid-template-columns:190px minmax(0,1fr); gap:12px; min-height:0; overflow:hidden; }
   .catalog-categories { display:flex; flex-direction:column; gap:7px; overflow:auto; max-height:52vh; }
   .catalog-category {
@@ -737,6 +739,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .catalog-empty { color:#a9bac6; padding:18px 10px; text-align:center; }
   @media (max-width:640px) {
     .catalog-dialog { padding:12px; max-height:88vh; }
+    .catalog-shortcuts .btn { min-width:calc(50% - 7px); font-size:.74rem; }
     .catalog-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(180px,1fr); }
     .catalog-categories { flex-direction:row; max-height:none; overflow-x:auto; padding-bottom:5px; }
     .catalog-category { white-space:nowrap; }
@@ -885,6 +888,12 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <div class="catalog-toolbar">
         <input id="catalog_search" type="search" placeholder="ابحث عن بلجن أو سكين أو قمر..." oninput="renderCommandLibrary()">
         <button class="btn b-gray" type="button" style="width:auto" onclick="refreshCommandLibrary()">↻ تحديث المكتبة</button>
+      </div>
+      <div class="catalog-shortcuts">
+        <button class="btn b-blue" type="button" onclick="refreshAndSelectCatalog('picons')">🛰️ تحديث صور القنوات</button>
+        <button class="btn b-teal" type="button" onclick="showMissingLibraries()">📚 المكتبات الناقصة</button>
+        <button class="btn b-amber" type="button" onclick="refreshAndSelectCatalog('images')">🖼️ تحديث قائمة صور الأنظمة</button>
+        <button class="btn b-indigo" type="button" onclick="selectCatalogCategory('channels')">📡 ملفات القنوات</button>
       </div>
       <div class="catalog-layout">
         <nav class="catalog-categories" id="catalog_categories" aria-label="تصنيفات المكتبة"></nav>
@@ -1047,7 +1056,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     return groups;
   }
   function isLibraryCompatible(item) {
-    const match = item.name.match(/Libraries[_ -]*(\\d+\\.\\d+)/i);
+    const match = item.name.match(/Libraries[_ -]*(\d+\.\d+)/i);
     if (!match || !receiverPythonVersion) return true;
     return receiverPythonVersion.indexOf(match[1]) === 0;
   }
@@ -1081,6 +1090,17 @@ HTML_PAGE = r"""<!DOCTYPE html>
     else refreshCommandLibrary(true);
   }
   function closeCommandLibrary() { $('catalog_modal').hidden = true; }
+  async function refreshAndSelectCatalog(id) {
+    activeCatalogCategory = id;
+    $('catalog_search').value = '';
+    await refreshCommandLibrary();
+    renderCommandLibrary();
+  }
+  function showMissingLibraries() {
+    activeCatalogCategory = 'feeds';
+    $('catalog_search').value = 'Libraries';
+    renderCommandLibrary();
+  }
   function selectCatalogCategory(id) {
     activeCatalogCategory = id;
     $('catalog_search').value = '';
@@ -1093,7 +1113,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     if (category === 'images' || category === 'bootlogos') {
       if (!confirm('تنبيه مهم: هذا الأمر مرتبط بملفات صورة/إقلاع وقد يغيّر ملفات النظام أو صورة الرسيفر. تأكد من الموديل والتوافق وخذ نسخة احتياطية. هل تريد وضع الأمر في التيرمنال؟')) return;
     }
-    if (/Libraries[_ -]*\\d+\\.\\d+/i.test(item.name) && !isLibraryCompatible(item)) {
+    if (/Libraries[_ -]*\d+\.\d+/i.test(item.name) && !isLibraryCompatible(item)) {
       alert('إصدار المكتبة لا يطابق Python الموجود على الرسيفر (' + (receiverPythonVersion || 'غير معروف') + ').');
       return;
     }
@@ -1107,15 +1127,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
     if (!cats || !results) return;
     cats.innerHTML = Object.keys(catalogGroups).map(id => {
       const group = catalogGroups[id];
-      let count = group.items.filter(item => id !== 'feeds' || isLibraryCompatible(item) || !/Libraries[_ -]*\\d+\\.\\d+/i.test(item.name)).length;
-      return '<button type="button" class="catalog-category ' + (id === activeCatalogCategory ? 'active' : '') + '" onclick="selectCatalogCategory(\\'' + id + '\\')">' +
+      let count = group.items.filter(item => id !== 'feeds' || isLibraryCompatible(item) || !/Libraries[_ -]*\d+\.\d+/i.test(item.name)).length;
+      return '<button type="button" class="catalog-category ' + (id === activeCatalogCategory ? 'active' : '') + '" data-category="' + id + '" onclick="selectCatalogCategory(this.dataset.category)">' +
         catalogEscape(group.label) + ' <small>(' + count + ')</small></button>';
     }).join('');
     const group = catalogGroups[activeCatalogCategory];
     if (!group) { results.innerHTML = '<div class="catalog-empty">لا توجد أوامر في هذا القسم.</div>'; return; }
     const query = ($('catalog_search').value || '').trim().toLowerCase();
     const items = group.items.filter(item => {
-      if (activeCatalogCategory === 'feeds' && /Libraries[_ -]*\\d+\\.\\d+/i.test(item.name) && !isLibraryCompatible(item)) return false;
+      if (activeCatalogCategory === 'feeds' && /Libraries[_ -]*\d+\.\d+/i.test(item.name) && !isLibraryCompatible(item)) return false;
       return !query || (item.name + ' ' + item.description + ' ' + item.category).toLowerCase().includes(query);
     });
     if (!items.length) {
@@ -1127,7 +1147,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     }
     results.innerHTML = items.map(item => {
       const index = group.items.indexOf(item);
-      return '<button type="button" class="catalog-item" onclick="selectCatalogCommand(\\'' + activeCatalogCategory + '\\',' + index + ')">' +
+      return '<button type="button" class="catalog-item" data-category="' + activeCatalogCategory + '" data-index="' + index + '" onclick="selectCatalogCommand(this.dataset.category, Number(this.dataset.index))">' +
         '<b>' + catalogEscape(item.name) + '</b><small>' + catalogEscape(item.description) + '</small></button>';
     }).join('');
     const note = $('catalog_note');

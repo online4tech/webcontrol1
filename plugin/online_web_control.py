@@ -691,7 +691,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <span class="wm">online<b>4</b>tech</span>
     </div>
     <div class="brand-tagline">خليك دايما اونلاين</div>
-    <h1>ONLINE TECHNOLOGY · لوحة التحكم المتكاملة لجهاز <span id="model">Enigma2</span> · Port %%PORT%%</h1>
+    <h1>ONLINE TECHNOLOGY · لوحة التحكم المتكاملة</h1>
   </div>
 
   <div class="stats">

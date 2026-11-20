@@ -63,6 +63,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: online4tech-control-center-ipk
-          path: dist/*
+          path: |
+            dist/enigma2-plugin-extensions-onlinewebcontrol-*.ipk
+            dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 90

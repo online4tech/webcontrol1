@@ -8,25 +8,16 @@
 wget -qO- https://raw.githubusercontent.com/online4tech/webcontrol1/main/install.sh | sh
 ```
 
-الرسيفر هيعمل ريستارت للواجهة تلقائياً بعد التثبيت.
-
-## التثبيت بملف ipk
-
-```sh
-wget -O /tmp/owc.ipk https://raw.githubusercontent.com/online4tech/webcontrol1/main/dist/enigma2-plugin-extensions-onlinewebcontrol_all.ipk
-opkg install /tmp/owc.ipk
-killall -9 enigma2
-```
-
-أو انسخ الملف من `dist/` للرسيفر بـ FTP وثبّته من قائمة البلجنات.
+بعد التثبيت اعمل إعادة تشغيل لواجهة Enigma2 يدويًا من قائمة الرسيفر.
 
 ## الاستخدام
+
 
 1. من قائمة البلجنات افتح **Online Web Control**.
 2. الزر الأخضر **فتح (تشغيل)**، الأحمر **قفل (إيقاف)**، وزر OK يبدّل بينهم.
 3. افتح من المتصفح: `http://IP-الرسيفر:7070`
 4. كل التحكم (إيمو، IPTV، قنوات، CCcam، تيرمنال...) جوه الصفحة نفسها.
-5. بيانات الدخول الافتراضية: `admin` / `admin` (غيّرها من أول ملف `plugin/online_web_control.py`).
+5. لا توجد شاشة تسجيل دخول؛ اللوحة مخصصة للشبكة المحلية فقط.
 
 ## الإعدادات (أول `plugin/online_web_control.py`)
 
@@ -63,4 +54,4 @@ git add -A && git commit -m "v1.1" && git push
 ## المتطلبات
 
 - Python 3 على الرسيفر.
-- تيرمنال اللوحة بصلاحيات root، فغيّر بيانات الدخول قبل ما تفتح البورت خارج الشبكة.
+- اللوحة تعمل بصلاحيات root وبدون كلمة مرور؛ أي جهاز على نفس الشبكة المحلية يمكنه التحكم في الرسيفر. لا تفتح أو تحوّل البورت 7070 إلى الإنترنت.

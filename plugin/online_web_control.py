@@ -56,7 +56,6 @@ PATH_NCAM_SERVER  = "/etc/tuxbox/config/ncam.server"
 PATH_OSCAM_SERVER = "/etc/tuxbox/config/oscam.server"
 
 ENIGMA_DIR = "/etc/enigma2"
-IPTV_PLAYLISTS = ["/etc/enigma2/xstreamity/playlists.txt", "/etc/enigma2/xklass/playlists.txt"]
 
 CURRENT_CWD = "/home/root" if os.path.exists("/home/root") else "/"
 SELF_PATH = os.path.abspath(__file__)
@@ -996,7 +995,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
       const response = await fetch('/api/iptv_detect');
       const result = await response.json();
       const plugins = (result.plugins || []);
-      const usable = plugins.filter(item => item.ready || item.supported === false);
+      const usable = plugins;
       if (!usable.length) {
         log('⚠️ لم يتم اكتشاف أي إضافة IPTV مدعومة ومثبتة. ثبّت الإضافة أولاً أو راجع مسارها.');
         return;
@@ -1373,7 +1372,7 @@ def discover_iptv_plugins():
 
 def do_iptv_save(d, targets):
     url = build_m3u_url(d)
-    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", d.get("name", "Online4Tech").strip())[:32] or "Online4Tech"
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", str(d.get("name") or "Online4Tech").strip())[:32] or "Online4Tech"
     line = "%s #Online4Tech_%s" % (url, safe_name)
     detected = {item["id"]: item for item in discover_iptv_plugins()}
     lines = []

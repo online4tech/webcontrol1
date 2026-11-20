@@ -275,6 +275,99 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .power { color: var(--muted); font-size: .76rem; margin-top: 14px; }
   .power b { color: var(--gold); }
   @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+
+  /* Online4Tech unified layout refresh */
+  .wrap {
+    width: min(100%, 1480px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+  .head, .stats, .foot { grid-column: 1 / -1; }
+  .head {
+    padding: 22px 24px;
+    border-radius: 22px;
+    border-color: rgba(242,194,48,.24);
+    background: linear-gradient(135deg, #151b22 0%, #0c1117 70%);
+  }
+  .logo { margin-bottom: 12px; }
+  .wm { letter-spacing: .2px; }
+  .head h1 { color: #c7d1da; font-size: 1rem; }
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0;
+  }
+  .stat {
+    min-width: 0;
+    padding: 15px 17px;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #17212a, #10171e);
+    border-color: #263541;
+  }
+  .card {
+    margin: 0;
+    min-width: 0;
+    padding: 20px;
+    border-radius: 20px;
+    border-color: #293844;
+    background: linear-gradient(145deg, #151e26, #10171e);
+    box-shadow: 0 10px 28px rgba(0,0,0,.28);
+    overflow: hidden;
+  }
+  .card-head {
+    min-height: 52px;
+    margin-bottom: 17px;
+    padding-bottom: 13px;
+    border-color: #2a3945;
+  }
+  .card-title { color: #f0c84a; }
+  .badge {
+    color: #e8c65a;
+    background: rgba(242,194,48,.08);
+    border-color: rgba(242,194,48,.25);
+  }
+  .card .stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+  .card .stack > .btn:only-child { grid-column: 1 / -1; }
+  .btn { min-width: 0; padding: 12px 10px; border-radius: 12px; }
+  .field { min-width: 0; }
+  input, textarea { border-color: #2a3945; background: #0b1117; }
+  .console-card { grid-column: 1 / -1; }
+  .console {
+    min-height: 130px;
+    max-height: 260px;
+    border-color: #273742;
+    background: #080d12;
+    border-radius: 14px;
+  }
+  .foot { margin-top: 2px; }
+  .pill-dark { border-color: #2b3944; background: #141e27; }
+  .power { color: #9aa8b4; }
+  @media (max-width: 900px) {
+    .wrap { gap: 13px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 15px; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 9px 9px 20px; }
+    .wrap { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 11px; }
+    .head, .stats, .foot, .console-card { grid-column: 1; }
+    .head { padding: 17px 12px; }
+    .wm { font-size: 1.65rem; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .stat { padding: 11px; }
+    .card { padding: 14px; border-radius: 16px; }
+    .card-head { min-height: 44px; margin-bottom: 13px; }
+    .card-title { font-size: .98rem; }
+    .card .stack { gap: 8px; }
+    .btn { padding: 10px 8px; font-size: .84rem; }
+    .console { min-height: 100px; max-height: 210px; }
+    .row2 { gap: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -285,7 +378,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><rect width="46" height="46" rx="11" fill="#f5b800"/><text x="23" y="34" text-anchor="middle" font-size="30" font-weight="800" font-family="Arial, sans-serif" fill="#111">4</text></svg>
       <span class="wm">online<b>4</b>tech</span>
     </div>
-    <h1>لوحة التحكم المتكاملة لجهاز <span id="model">Enigma2</span> - Port %%PORT%%</h1>
+    <h1>ONLINE TECHNOLOGY · لوحة التحكم المتكاملة لجهاز <span id="model">Enigma2</span> · Port %%PORT%%</h1>
   </div>
 
   <div class="stats">

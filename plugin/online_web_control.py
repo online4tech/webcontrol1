@@ -745,6 +745,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
     <div class="stack" style="margin-bottom:14px">
       <button class="btn b-indigo" onclick="installPlugin('xstreamity')">📦 تثبيت بلجن XStreamity</button>
       <button class="btn b-violet" onclick="installPlugin('xklass')">🎬 تثبيت بلجن XKlass</button>
+      <button class="btn b-emerald" onclick="installPlugin('ajpanel')">🧰 تثبيت بلجن AJPanel</button>
+      <button class="btn b-sky" onclick="installPlugin('jedimakerxtream')">🚀 تثبيت بلجن JediMakerXtream</button>
     </div>
     <div class="hint">الصق رابط M3U كامل مباشرة (سيقوم بتعبئة الحقول تلقائياً) أو استخدم الرابط الكامل مباشرة.</div>
     <div class="field"><input type="text" id="m3u" placeholder="http://server.com:8080/get.php?username=...&password=..." oninput="parseM3U(this.value)"></div>
@@ -1003,12 +1005,35 @@ def do_update_panel():
 
 
 def do_plugin(name):
-    url, pkg = (XSTREAMITY_URL, XSTREAMITY_PKG) if name == "xstreamity" else (XKLASS_URL, XKLASS_PKG)
+    plugins = {
+        "xstreamity": {
+            "label": "XStreamity", "url": XSTREAMITY_URL,
+            "pkg": XSTREAMITY_PKG,
+        },
+        "xklass": {
+            "label": "XKlass", "url": XKLASS_URL,
+            "pkg": XKLASS_PKG,
+        },
+        "ajpanel": {
+            "label": "AJPanel",
+            "url": "https://gitlab.com/eliesat/extensions/-/raw/main/ajpanel/ajpanel.sh",
+        },
+        "jedimakerxtream": {
+            "label": "JediMakerXtream",
+            "url": "https://gitlab.com/eliesat/extensions/-/raw/main/jedimakerxtream/jedimakerxtream.sh",
+        },
+    }
+    plugin = plugins.get(name)
+    if not plugin:
+        return "❌ بلجن غير معروف."
+    url, pkg = plugin.get("url", ""), plugin.get("pkg", "")
     if url:
-        out = run('wget -qO- "%s" | sh' % url, 240)
+        out = run('wget -qO- "%s" | sh' % url, 300)
+    elif pkg:
+        out = run("opkg update && opkg install %s" % pkg, 300)
     else:
-        out = run("opkg update && opkg install %s" % pkg, 240)
-    return "✅ انتهت عملية تثبيت %s:\n\n%s\n\nأعد تشغيل الواجهة لظهور البلجن." % (name, out or "تم.")
+        return "❌ لم يتم ضبط مصدر تثبيت %s." % plugin["label"]
+    return "✅ انتهت عملية تثبيت %s:\\n\\n%s\\n\\nأعد تشغيل الواجهة لظهور البلجن." % (plugin["label"], out or "تم.")
 
 
 def build_m3u_url(d):

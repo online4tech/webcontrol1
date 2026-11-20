@@ -508,6 +508,148 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .console { min-height: 100px; max-height: 220px; }
   }
 
+
+  /* Online4Tech glass dashboard layout */
+  body {
+    padding: 22px clamp(14px, 2.4vw, 36px) 34px;
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(34,105,145,.17), transparent 34%),
+      radial-gradient(ellipse at 88% 12%, rgba(180,145,65,.10), transparent 30%),
+      #080e14;
+    color: #edf3f8;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 1640px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:
+      "quick channels"
+      "emu iptv"
+      "cccam iptv"
+      "terminal console"
+      "foot foot";
+    gap: 18px;
+    align-items: stretch;
+  }
+  .head, .stats { grid-column: 1 / -1; }
+  .head { background: rgba(17,28,38,.82); border: 1px solid rgba(126,166,190,.24); box-shadow: 0 12px 34px rgba(0,0,0,.25); }
+  .stats { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 13px; margin: 0; }
+  .stat, .card {
+    background: linear-gradient(145deg, rgba(25,42,55,.88), rgba(13,24,34,.92));
+    border: 1px solid rgba(133,165,185,.22);
+    box-shadow: 0 12px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.035);
+    backdrop-filter: blur(12px);
+  }
+  .stat { border-radius: 15px; }
+  .card {
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .quick-card { grid-area: quick; }
+  .channels-card { grid-area: channels; }
+  .emu-card { grid-area: emu; }
+  .iptv-card { grid-area: iptv; }
+  .cccam-card { grid-area: cccam; }
+  .terminal-card { grid-area: terminal; }
+  .console-card { grid-area: console; }
+  .foot { grid-area: foot; }
+  .card-head {
+    min-height: 0;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(142,171,190,.18);
+  }
+  .card-title { color: #e2c878; font-size: 1.04rem; }
+  .badge {
+    color: #d9c98f;
+    background: rgba(208,177,91,.09);
+    border: 1px solid rgba(208,177,91,.25);
+  }
+  .card .stack {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 10px;
+  }
+  .quick-card .stack { max-width: 680px; margin: 0 auto; }
+  .channels-card .stack { max-width: 720px; margin: 0 auto; }
+  .btn {
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.17), 0 5px 14px rgba(0,0,0,.22);
+    font-size: .9rem;
+    font-weight: 700;
+    transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+  }
+  .btn:hover { filter: brightness(1.13); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 7px 19px rgba(0,0,0,.3); }
+  .btn:active { transform: translateY(1px); }
+  .b-yellow, .b-amber { background: linear-gradient(135deg,#9b792f,#c5a64e); color: #fff9e8; }
+  .b-blue, .b-sky, .b-indigo, .b-oscam { background: linear-gradient(135deg,#245878,#347da4); color: #f2faff; }
+  .b-green, .b-emerald, .b-teal { background: linear-gradient(135deg,#216b5c,#32947b); color: #f0fff9; }
+  .b-red, .b-rose { background: linear-gradient(135deg,#813e4b,#b45766); color: #fff4f5; }
+  .b-violet, .b-ncam { background: linear-gradient(135deg,#514c79,#7770a7); color: #f8f6ff; }
+  .b-gray { background: linear-gradient(135deg,#394954,#53616b); color: #f4f7f9; }
+  .hint { color: #a9bac6; }
+  .field label { color: #dce7ee; }
+  input, textarea {
+    color: #f1f6fa;
+    background: rgba(5,13,20,.72);
+    border: 1px solid rgba(135,166,187,.25);
+    border-radius: 11px;
+  }
+  input:focus, textarea:focus { outline: 1px solid #bca45f; border-color: #bca45f; }
+  .console {
+    min-height: 280px;
+    max-height: 420px;
+    background: rgba(4,10,15,.82);
+    border: 1px solid rgba(135,166,187,.22);
+    border-radius: 13px;
+    color: #b9dfcb;
+  }
+  .terminal-card, .console-card { height: 100%; }
+  .terminal-card textarea { min-height: 190px; }
+  .foot { margin-top: 0; }
+  .pill { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 18px rgba(0,0,0,.2); }
+  .pill-green { background: linear-gradient(135deg,#216b5c,#32947b); }
+  .pill-dark { background: rgba(23,38,49,.92); border: 1px solid rgba(135,166,187,.22); }
+  .power { color: #91a4b1; }
+  @media (max-width: 980px) {
+    body { padding: 14px 12px 24px; }
+    .wrap {
+      grid-template-columns: minmax(0,1fr);
+      grid-template-areas:
+        "quick" "channels" "emu" "cccam" "iptv" "terminal" "console" "foot";
+      gap: 13px;
+    }
+    .head, .stats { grid-column: 1; }
+    .stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .console { min-height: 180px; max-height: 300px; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 9px 8px 18px; }
+    .wrap { gap: 10px; }
+    .head { padding: 16px 12px; }
+    .wm { font-size: 1.55rem; }
+    .head h1 { font-size: .84rem; }
+    .card { padding: 13px; border-radius: 14px; }
+    .card-head { margin-bottom: 12px; }
+    .card-title { font-size: .94rem; }
+    .card .stack { gap: 8px; }
+    .btn { min-height: 41px; padding: 9px 7px; font-size: .8rem; }
+    .stat { padding: 10px; }
+    .console { min-height: 140px; max-height: 230px; }
+    .terminal-card textarea { min-height: 130px; }
+    .row2 { gap: 8px; }
+  }
+
 </style>
 </head>
 <body>
@@ -543,7 +685,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- IPTV -->
-  <div class="card">
+  <div class="card iptv-card">
     <div class="card-head">
       <span class="card-title">📺 إدارة اشتراك IPTV وبلجنات التشغيل</span>
       <span class="badge">Online4Tech<br>IPTV</span>
@@ -564,7 +706,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- الإيموهات -->
-  <div class="card">
+  <div class="card emu-card">
     <div class="card-head">
       <span class="card-title">🚀 تثبيت الإيموهات (Emu) (Scripts)</span>
       <span class="badge">تثبيت<br>تلقائي</span>
@@ -576,7 +718,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- القنوات والبيكونات -->
-  <div class="card">
+  <div class="card channels-card">
     <div class="card-head">
       <span class="card-title">📡 القنوات والبيكونات ودليل البرامج</span>
       <span class="badge">Online4Tech<br>Tools</span>
@@ -590,9 +732,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- CCcam -->
-  <div class="card">
+  <div class="card cccam-card">
     <div class="card-head">
-      <span class="card-title">🔑 بيانات اشتراك CCcam</span>
+      <span class="card-title">🔑 إضافة سيرفر CCcam / Reader</span>
       <span class="badge">تعبئة<br>ذكية</span>
     </div>
     <div class="hint">لصق سطر السيسكام كاملاً (اختياري - سيقوم بتعبئة الحقول تلقائياً):</div>
@@ -610,7 +752,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- التيرمنال -->
-  <div class="card">
+  <div class="card terminal-card">
     <div class="card-head">
       <span class="card-title">💻 تيرمنال الأوامر المباشر (Web Shell)</span>
       <span class="badge" id="cwd_badge">المسار:<br>/home/root</span>
@@ -624,7 +766,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- السجل -->
-  <div class="card">
+  <div class="card console-card">
     <div class="card-head"><span class="card-title">🖥️ سجل العمليات (Console Output)</span></div>
     <div class="console" id="console">Ready... في انتظار تنفيذ الأوامر.</div>
   </div>

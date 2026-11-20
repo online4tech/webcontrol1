@@ -1370,6 +1370,15 @@ def _picon_archive_members(archive, flatten):
     return image_files
 
 
+def _inspect_picon_archive(archive_path, flatten=False):
+    import zipfile
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        selected = _picon_archive_members(archive, flatten)
+        if not selected:
+            raise RuntimeError("ملف ZIP لا يحتوي على صور بيكونات معروفة.")
+        return len(selected), sum(item.file_size for item, relative in selected)
+
+
 def _safe_extract_picons(archive_path, destination, flatten=False):
     import zipfile
     os.makedirs(destination, exist_ok=True)
@@ -1443,17 +1452,33 @@ def do_picon_update(kind):
             shutil.rmtree(staging, ignore_errors=True)
         os.makedirs(staging, exist_ok=True)
         request = urllib.request.Request(PICON_ARCHIVES[kind], headers={"User-Agent": "Online4Tech-Control-Center"})
-        with urllib.request.urlopen(request, timeout=45) as response, open(archive_path, "wb") as output:
-            shutil.copyfileobj(response, output, 1024 * 1024)
+        with urllib.request.urlopen(request, timeout=45) as response:
+            content_length = int(response.headers.get("Content-Length") or 0)
+            if external and content_length:
+                stats = os.statvfs(base_dir)
+                free_bytes = stats.f_bavail * stats.f_frsize
+                if free_bytes < content_length + (30 * 1024 * 1024):
+                    raise RuntimeError("المساحة المتاحة على وحدة التخزين لا تكفي لتنزيل الأرشيف بأمان.")
+            with open(archive_path, "wb") as output:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    output.write(chunk)
+                    if external:
+                        stats = os.statvfs(base_dir)
+                        if (stats.f_bavail * stats.f_frsize) < (20 * 1024 * 1024):
+                            raise RuntimeError("تم إيقاف التنزيل لحماية آخر 20MB من مساحة وحدة التخزين.")
         archive_size = os.path.getsize(archive_path)
         if archive_size < 100:
             raise RuntimeError("ملف البيكونات الذي تم تنزيله فارغ أو غير صالح.")
-        count, expanded_size = _safe_extract_picons(archive_path, staging, flatten=external)
+        count, expanded_size = _inspect_picon_archive(archive_path, flatten=external)
         needed_mb = (expanded_size // (1024 * 1024)) + 30
         stats = os.statvfs(base_dir)
         free_mb = (stats.f_bavail * stats.f_frsize) // (1024 * 1024)
         if free_mb < needed_mb:
-            raise RuntimeError("المساحة غير كافية. المطلوب تقريباً %dMB والمتاح %dMB." % (needed_mb, free_mb))
+            raise RuntimeError("المساحة غير كافية قبل فك الضغط. المطلوب تقريباً %dMB والمتاح %dMB." % (needed_mb, free_mb))
+        count, expanded_size = _safe_extract_picons(archive_path, staging, flatten=external)
         if external:
             backup = _replace_directory_safely(staging, target)
             link_path = "/usr/share/enigma2/picon"

@@ -51,8 +51,8 @@ jobs:
           exit 0
           EOF
           chmod 0755 "$ROOT/control/postinst" "$ROOT/control/prerm"
-          (cd "$ROOT/data" && tar --numeric-owner --owner=0 --group=0 -czf "$OLDPWD/data.tar.gz" .)
-          (cd "$ROOT/control" && tar --numeric-owner --owner=0 --group=0 -czf "$OLDPWD/control.tar.gz" .)
+          (cd "$ROOT/data" && tar --numeric-owner --owner=0 --group=0 -czf "$GITHUB_WORKSPACE/data.tar.gz" .)
+          (cd "$ROOT/control" && tar --numeric-owner --owner=0 --group=0 -czf "$GITHUB_WORKSPACE/control.tar.gz" .)
           printf '2.0\n' > debian-binary
           ar r "$PKG-$VER.ipk" debian-binary control.tar.gz data.tar.gz
           mkdir -p dist

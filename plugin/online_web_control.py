@@ -26,9 +26,9 @@ AUTH_USER = ""
 AUTH_PASS = ""
 
 # روابط الأزرار السفلية (حط روابطك هنا)
-SUPPORT_URL = "#"
-SITE_URL    = "#"
-STORE_URL   = "#"
+SUPPORT_URL = "https://m.me/ahmad.m.romeh"
+SITE_URL    = "https://online4tech.github.io/online4Tech/"
+STORE_URL   = "https://sllr.co/dreamoxegypt"
 
 # رابط تحديث اللوحة (ملف السكربت نفسه) - اتركه فارغاً لتعطيل الزر
 PANEL_UPDATE_URL = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/plugin/online_web_control.py"
@@ -265,6 +265,23 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .row2 .btn { flex: 1; }
 
   .console { background: #040404; border: 1px solid #161614; border-radius: 12px; padding: 14px; font-family: 'Courier New', monospace; font-size: .82rem; color: #9be3b9; min-height: 150px; max-height: 340px; overflow-y: auto; direction: ltr; text-align: left; white-space: pre-wrap; line-height: 1.55; }
+
+  .brand-tagline { color: #e4c65d; font-size: 1rem; font-weight: 800; letter-spacing: .4px; margin: -3px 0 8px; text-shadow: 0 0 18px rgba(228,198,93,.18); }
+  .footer-title { color: #d9bd68; font-size: 1.12rem; font-weight: 800; margin: 0 0 12px; }
+  .contact-links, .store-links { justify-content: center; gap: 12px; margin-bottom: 12px; }
+  .contact-links .pill, .store-links .pill { flex: 1; min-width: 0; }
+  .contact-links .pill { min-height: 58px; border: 1px solid rgba(255,255,255,.12); }
+  .contact-links svg { width: 27px; height: 27px; flex: none; }
+  .contact-whatsapp { background: linear-gradient(135deg,#087e50,#16a66b); }
+  .contact-facebook { background: linear-gradient(135deg,#174d9c,#2878dc); }
+  .contact-links span { display: flex; flex-direction: column; align-items: center; line-height: 1.45; }
+  .contact-links b { color: #fff; font-size: .88rem; }
+  @media (max-width: 640px) {
+    .brand-tagline { font-size: .9rem; margin-bottom: 7px; }
+    .contact-links, .store-links { gap: 8px; }
+    .contact-links .pill { padding: 10px 7px; font-size: .82rem; }
+    .contact-links svg { width: 23px; height: 23px; }
+  }
 
   .foot { text-align: center; margin-top: 4px; }
   .pill { display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; font-size: .95rem; border-radius: 999px; padding: 14px 16px; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
@@ -656,10 +673,11 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <div class="wrap">
 
   <div class="head">
-    <div class="logo" role="img" aria-label="online4tech">
-      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><rect width="46" height="46" rx="11" fill="#f5b800"/><text x="23" y="34" text-anchor="middle" font-size="30" font-weight="800" font-family="Arial, sans-serif" fill="#111">4</text></svg>
+    <div class="logo" role="img" aria-label="Online4Tech">
+      <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><defs><linearGradient id="brandGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe58a"/><stop offset="1" stop-color="#c99a2e"/></linearGradient></defs><rect x="1" y="1" width="52" height="52" rx="15" fill="url(#brandGold)"/><path d="M12 28a15 15 0 0 1 25-11" fill="none" stroke="#101820" stroke-width="4" stroke-linecap="round"/><path d="M42 26a15 15 0 0 1-25 11" fill="none" stroke="#101820" stroke-width="4" stroke-linecap="round"/><path d="M20 27h14M27 20v14" stroke="#101820" stroke-width="3.5" stroke-linecap="round"/></svg>
       <span class="wm">online<b>4</b>tech</span>
     </div>
+    <div class="brand-tagline">خليك دايما اونلاين</div>
     <h1>ONLINE TECHNOLOGY · لوحة التحكم المتكاملة لجهاز <span id="model">Enigma2</span> · Port %%PORT%%</h1>
   </div>
 
@@ -772,8 +790,18 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <div class="foot">
-    <a class="pill pill-green" href="%%SUPPORT%%" target="_blank" rel="noopener">💬 تواصل مع الدعم الفني - Online4Tech</a>
-    <div class="row2">
+    <div class="footer-title">تواصل معانا</div>
+    <div class="row2 contact-links">
+      <a class="pill contact-whatsapp" href="https://wa.me/201006699169" target="_blank" rel="noopener" aria-label="تواصل واتساب">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 .8A15 15 0 0 0 3.1 23.5L1 31l7.7-2A15.1 15.1 0 1 0 16 .8Zm0 27.4a12.3 12.3 0 0 1-6.3-1.7l-.5-.3-4.6 1.2 1.2-4.5-.3-.5A12.3 12.3 0 1 1 16 28.2Zm6.8-9.2c-.4-.2-2.3-1.1-2.7-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.3-.5.3-.9.1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.4-2.2-2.8-.2-.4 0-.6.2-.8l.6-.7c.2-.2.3-.4.4-.7.1-.3 0-.5 0-.7-.1-.2-.9-2.1-1.2-2.8-.3-.7-.6-.6-.9-.6h-.8c-.3 0-.7.1-1.1.5-.4.4-1.4 1.3-1.4 3.2s1.4 3.7 1.6 4c.2.3 2.8 4.3 6.8 6 .9.4 1.6.6 2.1.7.9.3 1.8.2 2.4.1.8-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.2-.4-.3-.8-.5Z"/></svg>
+        <span>واتساب <b dir="ltr">01006699169</b></span>
+      </a>
+      <a class="pill contact-facebook" href="%%SUPPORT%%" target="_blank" rel="noopener" aria-label="تواصل عبر ماسنجر">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 2C8.1 2 2 7.8 2 15c0 4 1.9 7.5 5 9.8V30l4.8-2.6c1.3.4 2.7.6 4.2.6 7.9 0 14-5.8 14-13S23.9 2 16 2Zm1.4 17.5-3.6-3.8-7 3.8 7.7-8.2 3.7 3.8 6.9-3.8-7.7 8.2Z"/></svg>
+        <span>فيسبوك / ماسنجر</span>
+      </a>
+    </div>
+    <div class="row2 store-links">
       <a class="pill pill-dark" href="%%STORE%%" target="_blank" rel="noopener">🛒 متجر <b>Online4Tech</b></a>
       <a class="pill pill-dark" href="%%SITE%%" target="_blank" rel="noopener">🌐 الموقع الرسمي</a>
     </div>

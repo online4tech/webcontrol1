@@ -1033,7 +1033,7 @@ def do_plugin(name):
         out = run("opkg update && opkg install %s" % pkg, 300)
     else:
         return "❌ لم يتم ضبط مصدر تثبيت %s." % plugin["label"]
-    return "✅ انتهت عملية تثبيت %s:\\n\\n%s\\n\\nأعد تشغيل الواجهة لظهور البلجن." % (plugin["label"], out or "تم.")
+    return "✅ انتهت عملية تثبيت %s:\n\n%s\n\nأعد تشغيل الواجهة لظهور البلجن." % (plugin["label"], out or "تم.")
 
 
 def build_m3u_url(d):

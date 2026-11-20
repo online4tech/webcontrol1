@@ -1,21 +1,56 @@
 #!/bin/sh
-# Online Web Control - تثبيت على الرسيفر بأمر واحد
-REPO="online4tech/webcontrol1"
-BRANCH="main"
-URL="https://raw.githubusercontent.com/$REPO/$BRANCH/dist/enigma2-plugin-extensions-onlinewebcontrol_all.ipk"
-TMP="/tmp/onlinewebcontrol.ipk"
+# Online Web Control - direct source installer for Enigma2 (no IPK, no password)
+set -e
 
-echo "== Online Web Control installer =="
-rm -f "$TMP"
-wget -q -O "$TMP" "$URL" || wget -q --no-check-certificate -O "$TMP" "$URL"
-if [ ! -s "$TMP" ]; then
-  echo "ERROR: download failed. Check internet / repo name."
-  exit 1
+REPO_BASE="https://raw.githubusercontent.com/online4tech/webcontrol1/main"
+PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl"
+TMP_DIR="/tmp/onlinewebcontrol-install-$$"
+
+umask 077
+mkdir -p "$TMP_DIR"
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT HUP INT TERM
+
+download_file() {
+    remote="$1"
+    local_file="$2"
+    if ! wget -q -O "$local_file" "$remote"; then
+        wget --no-check-certificate -q -O "$local_file" "$remote" || return 1
+    fi
+    [ -s "$local_file" ]
+}
+
+echo "== Online Web Control: local-network installation =="
+
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+else
+    echo "ERROR: Python is required. No plugin files were installed."
+    exit 1
 fi
-opkg install --force-reinstall "$TMP" || { echo "ERROR: opkg install failed"; rm -f "$TMP"; exit 1; }
-rm -f "$TMP"
+
+echo "[1/2] Downloading plugin files..."
+download_file "$REPO_BASE/plugin/plugin.py" "$TMP_DIR/plugin.py" || { echo "ERROR: plugin.py download failed"; exit 1; }
+download_file "$REPO_BASE/plugin/online_web_control.py" "$TMP_DIR/online_web_control.py" || { echo "ERROR: online_web_control.py download failed"; exit 1; }
+download_file "$REPO_BASE/plugin/__init__.py" "$TMP_DIR/__init__.py" || { echo "ERROR: __init__.py download failed"; exit 1; }
+download_file "$REPO_BASE/VERSION" "$TMP_DIR/VERSION" || { echo "ERROR: VERSION download failed"; exit 1; }
+
+echo "[2/2] Installing plugin files..."
+mkdir -p "$PLUGIN_DIR"
+cp "$TMP_DIR/plugin.py" "$PLUGIN_DIR/plugin.py"
+cp "$TMP_DIR/online_web_control.py" "$PLUGIN_DIR/online_web_control.py"
+cp "$TMP_DIR/__init__.py" "$PLUGIN_DIR/__init__.py"
+cp "$TMP_DIR/VERSION" "$PLUGIN_DIR/VERSION"
+chmod 644 "$PLUGIN_DIR/plugin.py" "$PLUGIN_DIR/online_web_control.py" "$PLUGIN_DIR/__init__.py" "$PLUGIN_DIR/VERSION"
+
+echo "Installation complete."
+echo "Login/password: not required (local network use)."
+echo "Plugin path: $PLUGIN_DIR"
+echo "Panel port: 7070"
+echo "Python: $PYTHON_BIN"
 echo ""
-echo "Done. Panel port: 7070  (login: admin / admin)"
-echo "Restarting GUI in 3 seconds..."
-sleep 3
-killall -9 enigma2
+echo "Restart the Enigma2 GUI from the receiver menu."
+echo "Then open: http://RECEIVER-IP:7070"
+echo "Security: anyone on your local network may access and control this panel. Do not expose port 7070 to the Internet."

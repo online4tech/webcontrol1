@@ -1459,23 +1459,40 @@ def do_picon_update(kind):
             link_path = "/usr/share/enigma2/picon"
             link_parent = os.path.dirname(link_path)
             if not os.path.isdir(link_parent):
+                if backup and os.path.isdir(backup) and not os.path.lexists(target):
+                    os.rename(backup, target)
                 raise RuntimeError("مسار ربط البيكونات الداخلي غير موجود.")
             temporary_link = link_path + ".online4tech-new"
+            old_link_backup = ""
+            old_link_value = os.readlink(link_path) if os.path.islink(link_path) else ""
             try:
                 if os.path.lexists(temporary_link):
                     os.unlink(temporary_link)
                 os.symlink(target, temporary_link)
                 if os.path.lexists(link_path) and not os.path.islink(link_path):
-                    old_link_target = link_path + ".online4tech-old-" + str(int(time.time()))
-                    os.rename(link_path, old_link_target)
+                    old_link_backup = link_path + ".online4tech-old-" + str(int(time.time()))
+                    os.rename(link_path, old_link_backup)
                 os.replace(temporary_link, link_path)
-            finally:
+            except Exception:
                 if os.path.lexists(temporary_link):
                     os.unlink(temporary_link)
+                if old_link_backup and os.path.lexists(old_link_backup) and not os.path.lexists(link_path):
+                    os.rename(old_link_backup, link_path)
+                elif old_link_value and not os.path.lexists(link_path):
+                    os.symlink(old_link_value, link_path)
+                if backup and os.path.isdir(backup):
+                    failed_new = target + ".online4tech-failed-" + str(int(time.time()))
+                    if os.path.lexists(target):
+                        os.rename(target, failed_new)
+                    if not os.path.lexists(target):
+                        os.rename(backup, target)
+                raise
             result = "✅ تم تحديث البيكونات على وحدة التخزين: %s" % display_target
             result += "\nالمسار الفعلي: %s" % target
             if backup:
                 result += "\nتم الاحتفاظ بالنسخة السابقة في: %s" % backup
+            if old_link_backup:
+                result += "\nتم الاحتفاظ بمجلد الربط القديم في: %s" % old_link_backup
             result += "\nتم ربط /usr/share/enigma2/picon بالمسار الجديد."
         else:
             backup = _replace_directory_safely(staging, target)

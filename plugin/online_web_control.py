@@ -1300,7 +1300,7 @@ def build_m3u_url(d):
 
 
 PICON_ARCHIVES = {
-    "picon_ext": "https://github.com/KhaledAli65/books/releases/download/Picon/picon.zip",
+    "picon_ext": "https://github.com/online4tech/online4Tech/releases/download/online4tech-picons-picon/picon.zip",
     "picon_int": "https://github.com/KhaledAli65/picon/archive/refs/heads/main.zip",
 }
 

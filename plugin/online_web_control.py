@@ -989,7 +989,32 @@ HTML_PAGE = r"""<!DOCTYPE html>
     return { host, user, pass };
   }
   function installPlugin(p) { call('/api/plugin', { plugin: p }, '⏳ جاري تثبيت بلجن ' + p + ' ...\nيرجى الانتظار...'); }
-  function iptvSave() { const d = iptvData(); if (d) call('/api/iptv_save', d, '⏳ جاري حفظ الاشتراك...'); }
+  async function iptvSave() {
+    const d = iptvData();
+    if (!d) return;
+    try {
+      const response = await fetch('/api/iptv_detect');
+      const result = await response.json();
+      const plugins = (result.plugins || []);
+      const usable = plugins.filter(item => item.ready || item.supported === false);
+      if (!usable.length) {
+        log('⚠️ لم يتم اكتشاف أي إضافة IPTV مدعومة ومثبتة. ثبّت الإضافة أولاً أو راجع مسارها.');
+        return;
+      }
+      const menu = usable.map((item, index) =>
+        (index + 1) + ') ' + item.name + (item.ready ? ' — ' + item.path : ' — غير جاهز')
+      ).join('\n');
+      const answer = prompt('اختار الإضافات المطلوب حفظ الاشتراك فيها بكتابة الأرقام مفصولة بفاصلة:\n\n' + menu + '\n\nXC Plugin سيظهر للتنبيه فقط ولن يتم استبدال إعداداته.');
+      if (!answer) return;
+      const targets = answer.split(',').map(value => parseInt(value.trim(), 10) - 1)
+        .filter(index => Number.isInteger(index) && index >= 0 && index < usable.length)
+        .map(index => usable[index].id);
+      if (!targets.length) { log('⚠️ لم يتم اختيار رقم صحيح.'); return; }
+      call('/api/iptv_save', { ...d, targets }, '⏳ جاري حفظ الاشتراك في الإضافات المختارة...');
+    } catch (error) {
+      log('❌ تعذر اكتشاف إضافات IPTV: ' + error);
+    }
+  }
   function iptvBouquet() { const d = iptvData(); if (d) call('/api/iptv_bouquet', d, '⏳ جاري تحميل القائمة وبناء الباقات (Live / VOD / Series)...\nقد تستغرق دقيقة...'); }
 
   /* الإيمو والأدوات */
@@ -1273,21 +1298,119 @@ def build_m3u_url(d):
         d["host"], urllib.parse.quote(d["user"], safe=""), urllib.parse.quote(d["pass"], safe=""))
 
 
-def do_iptv_save(d):
+def read_enigma_settings():
+    values = {}
+    try:
+        with open("/etc/enigma2/settings", "r", encoding="utf-8", errors="ignore") as handle:
+            for raw in handle:
+                line = raw.strip()
+                if line.startswith("config.plugins.") and "=" in line:
+                    key, value = line.split("=", 1)
+                    values[key] = value
+    except Exception:
+        pass
+    return values
+
+
+def plugin_directory_exists(name):
+    candidates = (
+        "/usr/lib/enigma2/python/Plugins/Extensions/" + name,
+        "/usr/lib64/enigma2/python/Plugins/Extensions/" + name,
+        "/usr/lib/python/Plugins/Extensions/" + name,
+    )
+    return next((path for path in candidates if os.path.isdir(path)), "")
+
+
+def discover_iptv_plugins():
+    settings = read_enigma_settings()
+    found = []
+
+    xstreamity_dir = plugin_directory_exists("XStreamity")
+    if xstreamity_dir:
+        location = settings.get("config.plugins.XStreamity.location", "/etc/enigma2/xstreamity")
+        filename = os.path.basename(settings.get("config.plugins.XStreamity.playlist_name", "playlists.txt"))
+        if not filename.lower().endswith(".txt"):
+            filename = "playlists.txt"
+        found.append({
+            "id": "xstreamity", "name": "XStreamity",
+            "path": os.path.join(location, filename),
+            "ready": os.path.isdir(location) and os.access(location, os.W_OK),
+            "note": "ملف القوائم المحدد في إعدادات الإضافة"
+        })
+
+    xklass_dir = plugin_directory_exists("XKlass")
+    if xklass_dir:
+        location = settings.get("config.plugins.XKlass.location", "/etc/enigma2/xklass")
+        found.append({
+            "id": "xklass", "name": "XKlass",
+            "path": os.path.join(location, "playlists.txt"),
+            "ready": os.path.isdir(location) and os.access(location, os.W_OK),
+            "note": "ملف القوائم المحدد في إعدادات الإضافة"
+        })
+
+    jedi_dir = plugin_directory_exists("JediMakerXtream")
+    if jedi_dir:
+        location = settings.get("config.plugins.JediMakerXtream.location", "/etc/enigma2/jediplaylists/")
+        found.append({
+            "id": "jedimakerxtream", "name": "Jedi Maker Xtream",
+            "path": os.path.join(location, "playlists.txt"),
+            "ready": os.path.isdir(location) and os.access(location, os.W_OK),
+            "note": "ملف playlists.txt الخاص بالإضافة"
+        })
+
+    xc_dir = plugin_directory_exists("XCplugin")
+    if xc_dir:
+        location = settings.get("config.plugins.XCplugin.pthxmlfile", "/etc/enigma2/xc")
+        found.append({
+            "id": "xcplugin", "name": "XC Plugin",
+            "path": os.path.join(location, "xc_e2_plugin.xml"),
+            "ready": os.path.isdir(location) and os.access(location, os.W_OK),
+            "supported": False,
+            "note": "ملف XML واحد وإعداد سيرفر واحد؛ الحفظ التلقائي قد يستبدل الاشتراك الحالي"
+        })
+    return found
+
+
+def do_iptv_save(d, targets):
     url = build_m3u_url(d)
-    line = "%s #Online4Tech" % url
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", d.get("name", "Online4Tech").strip())[:32] or "Online4Tech"
+    line = "%s #Online4Tech_%s" % (url, safe_name)
+    detected = {item["id"]: item for item in discover_iptv_plugins()}
     lines = []
-    for path in IPTV_PLAYLISTS:
+    if not isinstance(targets, list) or not targets:
+        return "⚠️ لم يتم اختيار أي إضافة للحفظ."
+    for target in targets:
+        item = detected.get(str(target))
+        if not item:
+            lines.append("⚠️ تم تجاهل إضافة غير مثبتة أو غير معروفة: " + str(target))
+            continue
+        if not item.get("supported", True):
+            lines.append("⚠️ %s: لم يتم الحفظ بأمان. %s" % (item["name"], item["note"]))
+            continue
+        path = item["path"]
+        folder = os.path.dirname(path)
         try:
-            existing = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
-            if url in existing:
-                lines.append("• موجود بالفعل: " + path)
+            if not os.path.isdir(folder):
+                lines.append("⚠️ %s: مجلد القوائم غير موجود: %s" % (item["name"], folder))
                 continue
-            write_file(path, ("" if not existing or existing.endswith("\n") else "\n") + line + "\n", append=True)
-            lines.append("✅ تم الحفظ في: " + path)
-        except Exception as e:
-            lines.append("❌ %s : %s" % (path, e))
-    return "\n".join(lines) + "\n\nالرابط:\n" + url
+            if not os.access(folder, os.W_OK):
+                lines.append("❌ %s: لا توجد صلاحية كتابة في %s" % (item["name"], folder))
+                continue
+            existing = ""
+            if os.path.isfile(path):
+                with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+                    existing = handle.read()
+            if url in existing:
+                lines.append("• الاشتراك موجود بالفعل في %s: %s" % (item["name"], path))
+                continue
+            with open(path, "a", encoding="utf-8") as handle:
+                if existing and not existing.endswith("\n"):
+                    handle.write("\n")
+                handle.write(line + "\n")
+            lines.append("✅ تم حفظ الاشتراك في %s: %s" % (item["name"], path))
+        except Exception as error:
+            lines.append("❌ %s: %s" % (item["name"], error))
+    return "\n".join(lines) + "\n\nلم يتم حذف أو استبدال أي اشتراك سابق.\nالرابط: " + url
 
 
 def do_iptv_bouquet(d):
@@ -1594,6 +1717,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"catalog": catalog})
             except Exception as error:
                 self._json({"error": "تعذر تحميل المكتبة: %s" % error}, 502)
+        elif self.path == "/api/iptv_detect":
+            self._json({"plugins": discover_iptv_plugins()})
         elif self.path == "/api/stats":
             self._json(get_stats())
         else:
@@ -1614,7 +1739,7 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path == "/api/plugin":
                 out = do_plugin(p.get("plugin"))
             elif self.path == "/api/iptv_save":
-                out = do_iptv_save(p)
+                out = do_iptv_save(p, p.get("targets", []))
             elif self.path == "/api/iptv_bouquet":
                 out = do_iptv_bouquet(p)
             elif self.path == "/api/install":

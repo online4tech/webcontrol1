@@ -94,17 +94,18 @@ def _show_result(session, message, timeout=6):
         print("[OnlineWebControl] %s" % error)
 
 
-def _restart_gui_later():
-    """Restart only the Enigma2 GUI with a safe stop/start delay."""
+def _restart_gui(session):
+    """Restart only the Enigma2 GUI through Enigma2's native quit/restart flow."""
     try:
-        command = "sleep 8; init 4; sleep 12; init 3"
-        subprocess.Popen(
-            ["/bin/sh", "-c", command],
-            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True
-        )
+        from Screens.Standby import TryQuitMainloop
+        session.open(TryQuitMainloop, 3)
     except Exception as error:
-        print("[OnlineWebControl] GUI restart scheduling failed: %s" % error)
+        print("[OnlineWebControl] Native GUI restart failed: %s" % error)
+        _show_result(
+            session,
+            "تم التحديث بنجاح، لكن تعذر طلب إعادة تشغيل الواجهة تلقائيًا.\n%s" % error,
+            timeout=12
+        )
 
 def update_plugin(session):
     """Fetch and safely install the latest plugin files from the official GitHub repo."""
@@ -175,13 +176,8 @@ def update_plugin(session):
                 os.remove(backup)
             except Exception:
                 pass
-        _show_result(
-            session,
-            "تم تحديث Online4Tech بنجاح إلى الإصدار %s.\n"
-            "سيتم إعادة تشغيل واجهة Enigma2 تلقائيًا خلال ثوانٍ." % remote_version,
-            timeout=7
-        )
-        _restart_gui_later()
+        print("[OnlineWebControl] Updated successfully to version %s; restarting Enigma2 GUI." % remote_version)
+        _restart_gui(session)
         return
     except Exception as error:
         # Restore all files already replaced if any step failed.

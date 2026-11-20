@@ -19,6 +19,9 @@ jobs:
       - name: Checkout stable source
         uses: actions/checkout@v4
 
+      - name: Validate Python syntax
+        run: python3 -m py_compile plugin/plugin.py plugin/online_web_control.py plugin/__init__.py
+
       - name: Build IPK package
         shell: bash
         run: |

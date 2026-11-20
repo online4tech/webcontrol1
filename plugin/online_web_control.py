@@ -1062,41 +1062,206 @@ def do_iptv_bouquet(d):
     url = build_m3u_url(d)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        text = urllib.request.urlopen(req, timeout=120).read().decode("utf-8", "ignore")
+        playlist = urllib.request.urlopen(req, timeout=180).read().decode("utf-8", "ignore")
     except Exception as e:
         return "❌ تعذر تحميل ملف M3U:\n%s" % e
-    groups = {"live": [], "vod": [], "series": []}
-    name = None
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("#EXTINF"):
-            name = line.rsplit(",", 1)[-1].strip().replace(":", "-") or "Channel"
-        elif line and not line.startswith("#") and name is not None:
-            kind = "vod" if "/movie/" in line else "series" if "/series/" in line else "live"
-            groups[kind].append((name, line))
-            name = None
-    if not any(groups.values()):
-        return "⚠️ الملف لا يحتوي قنوات. تأكد من بيانات الاشتراك."
-    titles = {"live": "Online4Tech Live", "vod": "Online4Tech VOD", "series": "Online4Tech Series"}
-    bq_path = os.path.join(ENIGMA_DIR, "bouquets.tv")
-    bq_text = open(bq_path, encoding="utf-8").read() if os.path.exists(bq_path) else "#NAME Bouquets (TV)\n"
-    report = []
-    for kind, items in groups.items():
-        if not items:
+
+    def attr_value(line, key):
+        match = re.search(r'(?:^|[\s,])%s="([^"]*)"' % re.escape(key), line, re.I)
+        return match.group(1).strip() if match else ""
+
+    def clean_name(value, fallback="غير مصنف"):
+        value = re.sub(r"[\r\n\t]+", " ", str(value or ""))
+        value = re.sub(r"\s+", " ", value).strip()
+        value = value.replace("|", "-").replace(":", "-")
+        return value[:180] or fallback
+
+    def classify(stream_url, group):
+        path = urllib.parse.urlparse(stream_url).path.lower()
+        if re.search(r"/movie(?:/|$)", path):
+            return "movie"
+        if re.search(r"/series(?:/|$)", path):
+            return "series"
+        if re.search(r"/live(?:/|$)", path):
+            return "live"
+        hint = (group or "").lower()
+        if any(x in hint for x in ("series", "مسلسل", "مسلسلات")):
+            return "series"
+        if any(x in hint for x in ("movie", "movies", "film", "vod", "فيلم", "افلام", "أفلام", "مسرح")):
+            return "movie"
+        return "live"
+
+    def episode_parts(title, series_hint=""):
+        title = clean_name(title, "حلقة")
+        patterns = (
+            re.compile(r"^(.*?)\s*[-_. ]*\bS(\d{1,2})\s*E(\d{1,3})\b.*$", re.I),
+            re.compile(r"^(.*?)\s*[-_. ]*\b(\d{1,2})x(\d{1,3})\b.*$", re.I),
+            re.compile(r"^(.*?)\s*[-_. ]*(?:الموسم|موسم)\s*(\d+)\s*(?:الحلقة|حلقة)\s*(\d+).*$", re.I),
+        )
+        for pattern in patterns:
+            match = pattern.match(title)
+            if match:
+                show = clean_name(match.group(1), series_hint or "مسلسل")
+                return show, int(match.group(2)), int(match.group(3))
+        # بعض المزودين يضعون اسم المسلسل في tvg-name أو group-title.
+        show = clean_name(series_hint or title, "مسلسل")
+        return show, 9999, 9999
+
+    entries = []
+    current = None
+    pending_group = ""
+    for raw_line in playlist.splitlines():
+        line = raw_line.strip()
+        if not line:
             continue
-        fname = "userbouquet.online4tech_%s.tv" % kind
-        body = ["#NAME %s" % titles[kind]]
-        for n, u in items:
-            body.append("#SERVICE 4097:0:1:0:0:0:0:0:0:0:%s:%s" % (urllib.parse.quote(u, safe=""), n))
-            body.append("#DESCRIPTION %s" % n)
-        write_file(os.path.join(ENIGMA_DIR, fname), "\n".join(body) + "\n")
-        entry = '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "%s" ORDER BY bouquet' % fname
-        if fname not in bq_text:
-            bq_text = bq_text.rstrip("\n") + "\n" + entry + "\n"
-        report.append("✅ %s: %d" % (titles[kind], len(items)))
-    write_file(bq_path, bq_text)
+        if line.startswith("#EXTGRP:"):
+            pending_group = clean_name(line.split(":", 1)[1], "")
+            continue
+        if line.startswith("#EXTINF:"):
+            display = line.rsplit(",", 1)[-1].strip() if "," in line else ""
+            current = {
+                "name": clean_name(display, "بدون اسم"),
+                "group": clean_name(attr_value(line, "group-title") or pending_group, "غير مصنف"),
+                "tvg_name": clean_name(attr_value(line, "tvg-name"), ""),
+            }
+            pending_group = ""
+            continue
+        if line.startswith("#") or current is None:
+            continue
+        kind = classify(line, current["group"])
+        item = {
+            "kind": kind,
+            "name": current["name"],
+            "url": line,
+            "category": current["group"],
+        }
+        if kind == "series":
+            item["show"], item["season"], item["episode"] = episode_parts(
+                current["name"], current["tvg_name"]
+            )
+        entries.append(item)
+        current = None
+
+    if not entries:
+        return "⚠️ ملف الاشتراك اتحمّل، لكنه لا يحتوي عناصر M3U قابلة للتحويل."
+
+    # أنشئ ملفات مفضلات فرعية بأسماء ثابتة مبنية على hash لتفادي مشاكل أسماء الملفات العربية.
+    import hashlib
+
+    prefix = "userbouquet.online4tech_"
+
+    def file_key(value):
+        return hashlib.md5(value.encode("utf-8")).hexdigest()[:12]
+
+    def service_lines(items):
+        result = []
+        for item in items:
+            title = clean_name(item["name"], "بدون اسم")
+            stream = urllib.parse.quote(item["url"], safe="")
+            result.append("#SERVICE 4097:0:1:0:0:0:0:0:0:0:%s:%s" % (stream, title))
+            result.append("#DESCRIPTION %s" % title)
+        return result
+
+    generated = {}
+    top_sections = []
+
+    # Live: المفضلة الرئيسية تحتوي مفضلة مستقلة لكل تصنيف.
+    live_categories = {}
+    for item in entries:
+        if item["kind"] == "live":
+            live_categories.setdefault(item["category"], []).append(item)
+    if live_categories:
+        root_name = prefix + "live.tv"
+        root_lines = ["#NAME Online4Tech Live"]
+        for category in sorted(live_categories, key=lambda x: x.casefold()):
+            child = prefix + "live_" + file_key(category) + ".tv"
+            generated[child] = ["#NAME Live - " + clean_name(category)] + service_lines(live_categories[category])
+            root_lines.append('#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "%s" ORDER BY bouquet' % child)
+        generated[root_name] = root_lines
+        top_sections.append(root_name)
+
+    # Movie: مفضلة رئيسية، ثم تصنيفات، وكل فيلم/مسرحية عنصر مستقل باسمه.
+    movie_categories = {}
+    for item in entries:
+        if item["kind"] == "movie":
+            movie_categories.setdefault(item["category"], []).append(item)
+    if movie_categories:
+        root_name = prefix + "movie.tv"
+        root_lines = ["#NAME Online4Tech Movie"]
+        for category in sorted(movie_categories, key=lambda x: x.casefold()):
+            child = prefix + "movie_" + file_key(category) + ".tv"
+            generated[child] = ["#NAME Movie - " + clean_name(category)] + service_lines(movie_categories[category])
+            root_lines.append('#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "%s" ORDER BY bouquet' % child)
+        generated[root_name] = root_lines
+        top_sections.append(root_name)
+
+    # Series: كل مسلسل له مفضلة باسمه، والحلقات مرتبة بالموسم ثم رقم الحلقة.
+    series_shows = {}
+    for item in entries:
+        if item["kind"] == "series":
+            series_shows.setdefault(item["show"], []).append(item)
+    if series_shows:
+        root_name = prefix + "series.tv"
+        root_lines = ["#NAME Online4Tech Series"]
+        for show in sorted(series_shows, key=lambda x: x.casefold()):
+            child = prefix + "series_" + file_key(show) + ".tv"
+            episodes = sorted(
+                series_shows[show],
+                key=lambda x: (x["season"], x["episode"], x["name"].casefold())
+            )
+            generated[child] = ["#NAME " + clean_name(show)] + service_lines(episodes)
+            root_lines.append('#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "%s" ORDER BY bouquet' % child)
+        generated[root_name] = root_lines
+        top_sections.append(root_name)
+
+    # اكتب المفضلات الجديدة أولاً، ثم حدّث قائمة TV مع الحفاظ على كل مفضلات المستخدم الأخرى.
+    try:
+        os.makedirs(ENIGMA_DIR, exist_ok=True)
+        for filename, lines in generated.items():
+            write_file(os.path.join(ENIGMA_DIR, filename), "\n".join(lines) + "\n")
+
+        bq_path = os.path.join(ENIGMA_DIR, "bouquets.tv")
+        old_bouquets = open(bq_path, encoding="utf-8").read() if os.path.exists(bq_path) else "#NAME Bouquets (TV)\n"
+        kept_lines = [
+            line for line in old_bouquets.splitlines()
+            if prefix not in line
+        ]
+        if not kept_lines:
+            kept_lines = ["#NAME Bouquets (TV)"]
+        for filename in top_sections:
+            kept_lines.append(
+                '#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "%s" ORDER BY bouquet' % filename
+            )
+        write_file(bq_path, "\n".join(kept_lines) + "\n")
+
+        # امسح فقط ملفات Online4Tech القديمة التي لم تعد ضمن التوليد الحالي.
+        for filename in os.listdir(ENIGMA_DIR):
+            if filename.startswith(prefix) and filename.endswith(".tv") and filename not in generated:
+                try:
+                    os.remove(os.path.join(ENIGMA_DIR, filename))
+                except Exception:
+                    pass
+    except Exception as e:
+        return "❌ حصل خطأ أثناء إنشاء المفضلات:\n%s" % e
+
     run("wget -qO- 'http://127.0.0.1/web/servicelistreload?mode=2' >/dev/null 2>&1", 15)
-    return "\n".join(report) + "\n\nتم إنشاء الباقات. لو لم تظهر اعمل ريستارت للواجهة."
+    counts = {
+        "live": sum(1 for x in entries if x["kind"] == "live"),
+        "movie": sum(1 for x in entries if x["kind"] == "movie"),
+        "series": sum(1 for x in entries if x["kind"] == "series"),
+    }
+    return (
+        "✅ تم إنشاء مفضلات Online4Tech بنجاح:\n"
+        "📡 Live: %d قناة في %d تصنيف\n"
+        "🎬 Movie: %d فيلم/مسرحية في %d تصنيف\n"
+        "📺 Series: %d حلقة في %d مسلسل\n\n"
+        "تم تحديث المفضلات القديمة الخاصة بـ Online4Tech فقط، مع الحفاظ على باقي مفضلات الرسيفر."
+        % (
+            counts["live"], len(live_categories),
+            counts["movie"], len(movie_categories),
+            counts["series"], len(series_shows),
+        )
+    )
 
 
 def do_save(p):

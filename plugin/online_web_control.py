@@ -854,7 +854,6 @@ HTML_PAGE = r"""<!DOCTYPE html>
       const s = await (await fetch('/api/stats')).json();
       if (s.emu) { $('s_emu').textContent = s.emu; $('s_emu').className = 'v ok'; }
       else { $('s_emu').textContent = 'متوقف'; $('s_emu').className = 'v bad'; }
-      if (s.model) $('model').textContent = 'Enigma2';
       if (s.ram_pct !== undefined) {
         $('s_ram').textContent = s.ram_pct + '% (' + s.ram_used + '/' + s.ram_total + 'MB)';
         $('s_ram').className = 'v ' + (s.ram_pct > 90 ? 'bad' : s.ram_pct > 75 ? 'warn' : '');

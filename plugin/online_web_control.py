@@ -389,7 +389,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
   </div>
 
   <!-- التحكم السريع -->
-  <div class="card">
+  <div class="card quick-card">
     <div class="card-head">
       <span class="card-title">⚙️ التحكم السريع بالرسيفر واللوحة</span>
       <span class="badge">تحكم<br>فوري</span>

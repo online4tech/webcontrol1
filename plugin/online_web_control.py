@@ -21,9 +21,9 @@ from socketserver import ThreadingMixIn
 # ==========================================================
 PORT = int(os.environ.get("ONLINE_WEB_PORT", "7070"))
 
-# حماية الدخول (غيّر البيانات دي). سيبها فاضية "" لو عايز تلغي الحماية
-AUTH_USER = "admin"
-AUTH_PASS = "admin"
+# لا توجد شاشة تسجيل دخول؛ اللوحة مخصصة للاستخدام داخل الشبكة المحلية فقط.
+AUTH_USER = ""
+AUTH_PASS = ""
 
 # روابط الأزرار السفلية (حط روابطك هنا)
 SUPPORT_URL = "#"

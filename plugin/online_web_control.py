@@ -21,9 +21,19 @@ from socketserver import ThreadingMixIn
 # ==========================================================
 PORT = int(os.environ.get("ONLINE_WEB_PORT", "7070"))
 
-# حماية الدخول (غيّر البيانات دي). سيبها فاضية "" لو عايز تلغي الحماية
-AUTH_USER = "admin"
-AUTH_PASS = "admin"
+# بيانات الدخول تُقرأ من ملف محلي لا يُرفع إلى GitHub.
+# ملف التثبيت ينشئ كلمة مرور عشوائية خاصة بكل رسيفر.
+AUTH_FILE = "/etc/enigma2/online_web_control.auth"
+AUTH_USER = "online4tech"
+AUTH_PASS = "INSTALL_REQUIRED"
+try:
+    with open(AUTH_FILE, "r") as _auth_file:
+        _auth_lines = _auth_file.read().splitlines()
+    if len(_auth_lines) >= 2 and _auth_lines[0].strip() and _auth_lines[1].strip():
+        AUTH_USER = _auth_lines[0].strip()
+        AUTH_PASS = _auth_lines[1].strip()
+except Exception:
+    pass
 
 # روابط الأزرار السفلية (حط روابطك هنا)
 SUPPORT_URL = "#"
@@ -31,7 +41,7 @@ SITE_URL    = "#"
 STORE_URL   = "#"
 
 # رابط تحديث اللوحة (ملف السكربت نفسه) - اتركه فارغاً لتعطيل الزر
-PANEL_UPDATE_URL = "https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/plugin/online_web_control.py"
+PANEL_UPDATE_URL = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/plugin/online_web_control.py"
 
 # سكربتات تثبيت البلجنات. لو فاضية بيحاول opkg install
 XSTREAMITY_URL = ""

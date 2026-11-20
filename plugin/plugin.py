@@ -3,6 +3,7 @@
 # دوره فقط: تشغيل / إيقاف لوحة الويب (بورت 7070). كل التحكم الباقي داخل الصفحة.
 from __future__ import print_function
 import os
+import base64
 import signal
 import socket
 import subprocess
@@ -294,8 +295,26 @@ def main(session, **kwargs):
 
 
 
+
+PLUGIN_ICON = os.path.join(PLUGIN_DIR, "plugin.png")
+_PLUGIN_ICON_B64 = "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"
+
+
+def ensure_plugin_icon():
+    """Create the bundled receiver-menu icon on first plugin scan."""
+    try:
+        if not os.path.isfile(PLUGIN_ICON):
+            with open(PLUGIN_ICON, "wb") as icon_file:
+                icon_file.write(base64.b64decode(_PLUGIN_ICON_B64))
+            os.chmod(PLUGIN_ICON, 0o644)
+    except Exception as error:
+        print("[OnlineWebControl] Icon creation failed: %s" % error)
+
+
 def Plugins(**kwargs):
+    ensure_plugin_icon()
     return [PluginDescriptor(name="Online4Tech Control Center",
                              description="Online4Tech receiver control and GitHub updater (port %d)" % PORT,
                              where=PluginDescriptor.WHERE_PLUGINMENU,
+                             icon=PLUGIN_ICON,
                              fnc=main)]

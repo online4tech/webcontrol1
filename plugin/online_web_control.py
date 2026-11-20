@@ -177,7 +177,44 @@ HTML_PAGE = r"""<!DOCTYPE html>
   html { background: #090806; }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
   body { background: radial-gradient(circle at 50% -8%, #1d1807 0%, var(--bg) 52%); background-attachment: fixed; color: var(--text); min-height: 100vh; padding: 14px 12px 30px; }
-  .wrap { max-width: 560px; margin: 0 auto; }
+  .wrap { width: min(100%, 1580px); margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .head, .stats, .foot { grid-column: 1 / -1; }
+  .head { padding: 14px 18px; }
+  .stats { margin: 0; gap: 12px; }
+  .card { margin: 0; padding: 16px; min-width: 0; }
+  .card-head { margin-bottom: 12px; padding-bottom: 10px; }
+  .stack { gap: 9px; }
+  .btn { padding: 11px 10px; font-size: .92rem; }
+  .field { margin-bottom: 9px; }
+  input, textarea { padding: 11px 10px; }
+  .console { min-height: 110px; max-height: 260px; }
+  @media (max-width: 1100px) {
+    .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .card { padding: 14px; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 8px 8px 18px; }
+    .wrap { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .head, .stats, .foot { grid-column: 1; }
+    .head { padding: 12px 10px; border-radius: 14px; }
+    .wm { font-size: 1.55rem; }
+    .head h1 { font-size: .9rem; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .stat { padding: 9px 10px; }
+    .stat .k { font-size: .7rem; }
+    .stat .v { font-size: .88rem; }
+    .card { border-radius: 14px; padding: 12px; }
+    .card-title { font-size: .98rem; }
+    .badge { font-size: .62rem; padding: 4px 8px; }
+    .btn { padding: 10px 9px; font-size: .88rem; border-radius: 11px; }
+    .hint { font-size: .76rem; }
+    .console { min-height: 90px; max-height: 220px; font-size: .76rem; }
+    .row2 { gap: 8px; }
+    .pill { font-size: .86rem; padding: 11px 12px; }
+  }
+  @media (min-width: 641px) and (max-width: 900px) {
+    .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
 
   .head { text-align: center; background: #0c0b08; border: 1px solid var(--line); border-radius: 18px; padding: 16px 12px 14px; box-shadow: 0 8px 26px rgba(0,0,0,.45); }
   .logo { display: flex; align-items: center; justify-content: center; gap: 11px; direction: ltr; margin-bottom: 10px; }

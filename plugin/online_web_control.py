@@ -1297,6 +1297,205 @@ def build_m3u_url(d):
         d["host"], urllib.parse.quote(d["user"], safe=""), urllib.parse.quote(d["pass"], safe=""))
 
 
+PICON_ARCHIVES = {
+    "picon_ext": "https://github.com/KhaledAli65/books/releases/download/Picon/picon.zip",
+    "picon_int": "https://github.com/KhaledAli65/picon/archive/refs/heads/main.zip",
+}
+
+
+def _mount_unescape(value):
+    return re.sub(r"\\([0-7]{3})", lambda match: chr(int(match.group(1), 8)), value)
+
+
+def discover_writable_storage(min_free_mb=100):
+    candidates = {}
+    try:
+        with open("/proc/mounts", "r", encoding="utf-8", errors="ignore") as handle:
+            mounts = [line.split() for line in handle if len(line.split()) >= 3]
+    except Exception:
+        mounts = []
+    excluded_fs = {"rootfs", "tmpfs", "ramfs", "proc", "sysfs", "devtmpfs", "overlay", "squashfs"}
+    for fields in mounts:
+        device, mountpoint, fs_type = fields[0], _mount_unescape(fields[1]), fields[2]
+        if not mountpoint.startswith("/media/") or fs_type.lower() in excluded_fs:
+            continue
+        try:
+            real_path = os.path.realpath(mountpoint)
+            if not os.path.isdir(real_path) or real_path == "/":
+                continue
+            stats = os.statvfs(real_path)
+            free_mb = (stats.f_bavail * stats.f_frsize) // (1024 * 1024)
+            if free_mb < min_free_mb or not os.access(real_path, os.W_OK):
+                continue
+            current = candidates.get(real_path)
+            if current is None or free_mb > current["free_mb"]:
+                candidates[real_path] = {
+                    "path": real_path, "mountpoint": mountpoint,
+                    "device": device, "filesystem": fs_type, "free_mb": free_mb
+                }
+        except Exception:
+            continue
+    # /media/hdd may be a symlink to a real mount such as /media/mmcblk1p5.
+    for alias in ("/media/hdd", "/media/usb"):
+        try:
+            real_path = os.path.realpath(alias)
+            if real_path in candidates:
+                candidates[real_path]["aliases"] = sorted(set(candidates[real_path].get("aliases", []) + [alias]))
+        except Exception:
+            pass
+    return sorted(candidates.values(), key=lambda item: item["free_mb"], reverse=True)
+
+
+def _picon_archive_members(archive, flatten):
+    all_files = [item for item in archive.infolist() if not item.is_dir()]
+    picon_files = []
+    for item in all_files:
+        name = item.filename.replace("\\", "/")
+        parts = [part for part in name.split("/") if part]
+        if "picon" in [part.lower() for part in parts]:
+            index = [part.lower() for part in parts].index("picon")
+            relative = parts[index + 1:]
+            if relative and relative[-1].lower().endswith((".png", ".svg", ".jpg", ".webp")):
+                picon_files.append((item, "/".join(relative[-1:] if flatten else relative)))
+    if picon_files:
+        return picon_files
+    image_files = []
+    for item in all_files:
+        name = item.filename.replace("\\", "/")
+        parts = [part for part in name.split("/") if part]
+        if parts and parts[-1].lower().endswith((".png", ".svg", ".jpg", ".webp")):
+            image_files.append((item, parts[-1] if flatten else parts[-1]))
+    return image_files
+
+
+def _safe_extract_picons(archive_path, destination, flatten=False):
+    import zipfile
+    os.makedirs(destination, exist_ok=True)
+    total = 0
+    count = 0
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        selected = _picon_archive_members(archive, flatten)
+        if not selected:
+            raise RuntimeError("ملف ZIP لا يحتوي على صور بيكونات معروفة.")
+        for item, relative in selected:
+            normalized = os.path.normpath(relative)
+            if normalized.startswith("..") or os.path.isabs(normalized):
+                continue
+            target = os.path.join(destination, normalized)
+            if not os.path.commonpath([os.path.realpath(destination), os.path.realpath(os.path.dirname(target))]).startswith(os.path.realpath(destination)):
+                continue
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with archive.open(item, "r") as source, open(target, "wb") as output:
+                shutil.copyfileobj(source, output, 1024 * 1024)
+            try:
+                os.chmod(target, 0o644)
+            except Exception:
+                pass
+            total += item.file_size
+            count += 1
+    if count == 0:
+        raise RuntimeError("لم يتم استخراج أي ملف بيكونات صالح.")
+    return count, total
+
+
+def _replace_directory_safely(staging, target):
+    import time
+    backup = target + ".online4tech-backup-" + str(int(time.time()))
+    moved_old = False
+    if os.path.lexists(target):
+        os.rename(target, backup)
+        moved_old = True
+    try:
+        os.rename(staging, target)
+    except Exception:
+        if moved_old and not os.path.lexists(target):
+            os.rename(backup, target)
+        raise
+    return backup if moved_old else ""
+
+
+def do_picon_update(kind):
+    if kind not in PICON_ARCHIVES:
+        return "❌ نوع تحديث البيكونات غير معروف."
+    external = kind == "picon_ext"
+    storages = discover_writable_storage(100)
+    if external and not storages:
+        return "⚠️ لم يتم العثور على هارد أو فلاشة صالحة بمساحة فارغة لا تقل عن 100MB. لم يتم تغيير أي ملف."
+    if external:
+        storage = storages[0]
+        base_dir = storage["path"]
+        target = os.path.join(base_dir, "picon")
+        display_target = storage["mountpoint"]
+    else:
+        base_dir = "/usr/share/enigma2"
+        target = os.path.join(base_dir, "picon")
+        display_target = "الذاكرة الداخلية"
+        if not os.path.isdir(base_dir) or not os.access(base_dir, os.W_OK):
+            return "❌ مجلد Enigma2 الداخلي غير قابل للكتابة. لم يتم إجراء أي تغيير."
+    try:
+        os.makedirs(base_dir, exist_ok=True)
+        work_dir = tempfile.mkdtemp(prefix=".online4tech-picon-", dir=base_dir if external else "/tmp")
+        archive_path = os.path.join(work_dir, "picons.zip")
+        staging = os.path.join(base_dir, ".picon-online4tech-new-" + str(os.getpid()))
+        if os.path.exists(staging):
+            shutil.rmtree(staging, ignore_errors=True)
+        os.makedirs(staging, exist_ok=True)
+        request = urllib.request.Request(PICON_ARCHIVES[kind], headers={"User-Agent": "Online4Tech-Control-Center"})
+        with urllib.request.urlopen(request, timeout=45) as response, open(archive_path, "wb") as output:
+            shutil.copyfileobj(response, output, 1024 * 1024)
+        archive_size = os.path.getsize(archive_path)
+        if archive_size < 100:
+            raise RuntimeError("ملف البيكونات الذي تم تنزيله فارغ أو غير صالح.")
+        count, expanded_size = _safe_extract_picons(archive_path, staging, flatten=external)
+        needed_mb = (expanded_size // (1024 * 1024)) + 30
+        stats = os.statvfs(base_dir)
+        free_mb = (stats.f_bavail * stats.f_frsize) // (1024 * 1024)
+        if free_mb < needed_mb:
+            raise RuntimeError("المساحة غير كافية. المطلوب تقريباً %dMB والمتاح %dMB." % (needed_mb, free_mb))
+        if external:
+            backup = _replace_directory_safely(staging, target)
+            link_path = "/usr/share/enigma2/picon"
+            link_parent = os.path.dirname(link_path)
+            if not os.path.isdir(link_parent):
+                raise RuntimeError("مسار ربط البيكونات الداخلي غير موجود.")
+            temporary_link = link_path + ".online4tech-new"
+            try:
+                if os.path.lexists(temporary_link):
+                    os.unlink(temporary_link)
+                os.symlink(target, temporary_link)
+                if os.path.lexists(link_path) and not os.path.islink(link_path):
+                    old_link_target = link_path + ".online4tech-old-" + str(int(time.time()))
+                    os.rename(link_path, old_link_target)
+                os.replace(temporary_link, link_path)
+            finally:
+                if os.path.lexists(temporary_link):
+                    os.unlink(temporary_link)
+            result = "✅ تم تحديث البيكونات على وحدة التخزين: %s" % display_target
+            result += "\nالمسار الفعلي: %s" % target
+            if backup:
+                result += "\nتم الاحتفاظ بالنسخة السابقة في: %s" % backup
+            result += "\nتم ربط /usr/share/enigma2/picon بالمسار الجديد."
+        else:
+            backup = _replace_directory_safely(staging, target)
+            result = "✅ تم تحديث البيكونات داخلياً في: %s" % target
+            if backup:
+                result += "\nتم الاحتفاظ بالنسخة السابقة في: %s" % backup
+        return result + "\nعدد الصور: %d | الحجم بعد الفك: %dMB\nلم يتم حذف النسخة القديمة أو إعادة تشغيل Enigma2." % (count, expanded_size // (1024 * 1024))
+    except Exception as error:
+        try:
+            if "staging" in locals() and os.path.isdir(staging):
+                shutil.rmtree(staging, ignore_errors=True)
+        except Exception:
+            pass
+        return "❌ فشل تحديث البيكونات دون حذف النسخة السابقة:\n%s" % error
+    finally:
+        try:
+            if "work_dir" in locals():
+                shutil.rmtree(work_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+
 def read_enigma_settings():
     values = {}
     try:
@@ -1746,12 +1945,17 @@ class Handler(BaseHTTPRequestHandler):
                 url = OSCAM_SCRIPT_URL if emu == "oscam" else NCAM_SCRIPT_URL
                 out = "✅ انتهى تثبيت %s:\n\n%s" % (str(emu).upper(), run('wget -qO- "%s" | sh' % url, 180) or "تم.")
             elif self.path == "/api/tool":
-                url = TOOLS_URLS.get(p.get("tool"))
-                if not url:
-                    self._json({"output": "❌ أداة غير معروفة."}, 400)
-                    return
-                label = p.get("label") or p.get("tool")
-                out = "✅ انتهى تنفيذ (%s):\n\n%s" % (label, run('wget -qO- "%s" | sh' % url, 240) or "تم.")
+                tool = p.get("tool")
+                if tool in ("picon_ext", "picon_int"):
+                    label = p.get("label") or tool
+                    out = do_picon_update(tool)
+                else:
+                    url = TOOLS_URLS.get(tool)
+                    if not url:
+                        self._json({"output": "❌ أداة غير معروفة."}, 400)
+                        return
+                    label = p.get("label") or tool
+                    out = "✅ انتهى تنفيذ (%s):\n\n%s" % (label, run('wget -qO- "%s" | sh' % url, 240) or "تم.")
             elif self.path == "/api/save":
                 out = do_save(p)
             elif self.path == "/api/exec":

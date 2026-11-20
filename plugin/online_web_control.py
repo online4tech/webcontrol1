@@ -892,6 +892,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <div class="catalog-shortcuts">
         <button class="btn b-blue" type="button" onclick="refreshAndSelectCatalog('picons')">🛰️ تحديث صور القنوات</button>
         <button class="btn b-teal" type="button" onclick="showMissingLibraries()">📚 المكتبات الناقصة</button>
+        <button class="btn b-gray" type="button" onclick="showPackageIndexes()">🔄 تحديث فهارس الحزم</button>
         <button class="btn b-amber" type="button" onclick="refreshAndSelectCatalog('images')">🖼️ تحديث قائمة صور الأنظمة</button>
         <button class="btn b-indigo" type="button" onclick="selectCatalogCategory('channels')">📡 ملفات القنوات</button>
       </div>
@@ -1099,6 +1100,11 @@ HTML_PAGE = r"""<!DOCTYPE html>
   function showMissingLibraries() {
     activeCatalogCategory = 'feeds';
     $('catalog_search').value = 'Libraries';
+    renderCommandLibrary();
+  }
+  function showPackageIndexes() {
+    activeCatalogCategory = 'tools';
+    $('catalog_search').value = 'تحديث فهارس الحزم';
     renderCommandLibrary();
   }
   function selectCatalogCategory(id) {

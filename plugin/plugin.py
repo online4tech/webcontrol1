@@ -100,7 +100,7 @@ def _restart_gui_later():
             "sleep 8; "
             "init 4; "
             "n=0; "
-            "while pidof enigma2 >/dev/null 2>&1 && [ \\"$n\\" -lt 30 ]; do "
+            "while pidof enigma2 >/dev/null 2>&1 && [ \"$n\" -lt 30 ]; do "
             "sleep 1; n=$((n + 1)); "
             "done; "
             "sleep 3; "

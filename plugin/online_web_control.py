@@ -542,6 +542,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(0,1fr);
     grid-template-areas:
+      "head head"
+      "stats stats"
       "quick channels"
       "emu iptv"
       "cccam iptv"
@@ -550,6 +552,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
     gap: 18px;
     align-items: stretch;
   }
+  .head { grid-area: head; }
+  .stats { grid-area: stats; }
   .head, .stats { grid-column: 1 / -1; }
   .head { background: rgba(17,28,38,.82); border: 1px solid rgba(126,166,190,.24); box-shadow: 0 12px 34px rgba(0,0,0,.25); }
   .stats { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 13px; margin: 0; }
@@ -643,7 +647,16 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .wrap {
       grid-template-columns: minmax(0,1fr);
       grid-template-areas:
-        "quick" "channels" "emu" "cccam" "iptv" "terminal" "console" "foot";
+        "head"
+        "stats"
+        "quick"
+        "channels"
+        "emu"
+        "cccam"
+        "iptv"
+        "terminal"
+        "console"
+        "foot";
       gap: 13px;
     }
     .head, .stats { grid-column: 1; }

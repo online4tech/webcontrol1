@@ -5,7 +5,7 @@
 ## التثبيت بأمر واحد (على الرسيفر)
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/online4tech/webcontrol1/main/install.sh | sh
+wget -qO- https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/install.sh | sh
 ```
 
 الرسيفر هيعمل ريستارت للواجهة تلقائياً بعد التثبيت.
@@ -13,7 +13,7 @@ wget -qO- https://raw.githubusercontent.com/online4tech/webcontrol1/main/install
 ## التثبيت بملف ipk
 
 ```sh
-wget -O /tmp/owc.ipk https://raw.githubusercontent.com/online4tech/webcontrol1/main/dist/enigma2-plugin-extensions-onlinewebcontrol_all.ipk
+wget -O /tmp/owc.ipk https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/dist/enigma2-plugin-extensions-onlinewebcontrol_all.ipk
 opkg install /tmp/owc.ipk
 killall -9 enigma2
 ```
@@ -23,10 +23,9 @@ killall -9 enigma2
 ## الاستخدام
 
 1. من قائمة البلجنات افتح **Online Web Control**.
-2. الزر الأخضر **فتح (تشغيل)**، الأحمر **قفل (إيقاف)**، وزر OK يبدّل بينهم.
+2. الزر الأخضر **تشغيل**، الأحمر **إيقاف**، الأصفر **تشغيل تلقائي**، الأزرق **تحديث**.
 3. افتح من المتصفح: `http://IP-الرسيفر:7070`
-4. كل التحكم (إيمو، IPTV، قنوات، CCcam، تيرمنال...) جوه الصفحة نفسها.
-5. بيانات الدخول الافتراضية: `admin` / `admin` (غيّرها من أول ملف `plugin/online_web_control.py`).
+4. بيانات الدخول الافتراضية: `admin` / `admin` (غيّرها من أول ملف `plugin/online_web_control.py`).
 
 ## الإعدادات (أول `plugin/online_web_control.py`)
 
@@ -45,6 +44,7 @@ dist/              ملف ipk الجاهز
 docs/              ملف الشرح PDF والبوست
 install.sh         أمر التثبيت
 build_ipk.sh       بناء ipk جديد
+setup.sh           ضبط اسم حساب GitHub في الملفات
 VERSION            رقم الإصدار
 ```
 

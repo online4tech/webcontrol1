@@ -1,0 +1,24 @@
+🚀 Online Web Control من Online4Tech
+
+لوحة تحكم متكاملة لرسيفر Enigma2 من المتصفح، على بورت 7070:
+
+⚙️ ريستارت الإيمو / الواجهة / الرسيفر
+📺 إدارة اشتراك IPTV وتثبيت XStreamity و XKlass
+🚀 تثبيت OSCam و NCam
+📡 تحديث القنوات والبيكونات والـ EPG
+🔑 حفظ سطر CCcam في ملفاته
+💻 تيرمنال مباشر وسجل عمليات
+🌡️ شاشة حالة: IP والرام والفلاش والحرارة
+
+✅ بلجن بسيط في قائمة الرسيفر: تشغيل / إيقاف / تشغيل تلقائي
+
+📥 التثبيت: افتح تيرمنال الرسيفر والصق الأمر:
+
+wget -qO- https://raw.githubusercontent.com/YOUR_USER/OnlineWebControl/main/install.sh | sh
+
+بعد ريستارت الواجهة: قائمة البلجنات ← Online Web Control ← الزر الأخضر ← افتح http://IP-الرسيفر:7070
+بيانات الدخول الافتراضية: admin / admin (غيّرها بعد أول دخول)
+
+🔗 الريبو وملف ipk: https://github.com/YOUR_USER/OnlineWebControl
+
+Powered by Online4Tech

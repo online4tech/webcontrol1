@@ -32,6 +32,7 @@ STORE_URL   = "https://sllr.co/online4tech"
 
 # رابط تحديث اللوحة (ملف السكربت نفسه) - اتركه فارغاً لتعطيل الزر
 PANEL_UPDATE_URL = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/plugin/online_web_control.py"
+CATALOG_URL = "https://raw.githubusercontent.com/online4tech/Chanal-List/main/control-center/data/catalog.json"
 
 # سكربتات تثبيت البلجنات. لو فاضية بيحاول opkg install
 XSTREAMITY_URL = ""
@@ -109,7 +110,8 @@ def active_emu():
 
 
 def get_stats():
-    st = {"ip": get_ip(), "port": PORT, "model": "Enigma2", "emu": active_emu()}
+    st = {"ip": get_ip(), "port": PORT, "model": "Enigma2", "emu": active_emu(),
+          "python": "%d.%d.%d" % sys.version_info[:3]}
     try:
         mem = {}
         with open("/proc/meminfo") as f:
@@ -701,6 +703,47 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .compact-fields input { padding: 8px; min-height: 38px; font-size: .8rem; }
   }
 
+  .terminal-tools { display:flex; gap:9px; flex-wrap:wrap; margin: 0 0 11px; }
+  .terminal-tools .btn { flex:1; min-width:150px; }
+  .catalog-overlay[hidden] { display:none !important; }
+  .catalog-overlay {
+    position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+    padding:16px; background:rgba(2,8,13,.78); backdrop-filter:blur(8px);
+  }
+  .catalog-dialog {
+    width:min(920px,100%); max-height:min(82vh,760px); display:flex; flex-direction:column;
+    padding:18px; border:1px solid rgba(208,177,91,.34); border-radius:18px;
+    background:linear-gradient(145deg,#17232d,#0d151c); box-shadow:0 24px 70px rgba(0,0,0,.55);
+  }
+  .catalog-dialog .card-head { margin-bottom:12px; }
+  .catalog-toolbar { display:flex; gap:9px; align-items:center; margin-bottom:12px; }
+  .catalog-toolbar input { flex:1; min-width:0; }
+  .catalog-layout { display:grid; grid-template-columns:190px minmax(0,1fr); gap:12px; min-height:0; overflow:hidden; }
+  .catalog-categories { display:flex; flex-direction:column; gap:7px; overflow:auto; max-height:52vh; }
+  .catalog-category {
+    border:1px solid rgba(135,166,187,.2); border-radius:10px; padding:9px 10px;
+    color:#dce7ee; background:rgba(5,13,20,.55); text-align:right; cursor:pointer; font:inherit;
+  }
+  .catalog-category.active { border-color:rgba(208,177,91,.55); background:rgba(208,177,91,.13); color:#f0d98e; }
+  .catalog-results { overflow:auto; max-height:52vh; display:flex; flex-direction:column; gap:8px; padding-inline-end:3px; }
+  .catalog-item {
+    border:1px solid rgba(135,166,187,.18); border-radius:11px; padding:10px 12px;
+    background:rgba(5,13,20,.48); color:#e8edf2; text-align:right; cursor:pointer;
+  }
+  .catalog-item:hover { border-color:rgba(208,177,91,.55); background:rgba(208,177,91,.08); }
+  .catalog-item b { display:block; color:#e6ce83; margin-bottom:3px; }
+  .catalog-item small { display:block; color:#a9bac6; line-height:1.55; }
+  .catalog-note { color:#d5bd78; font-size:.78rem; line-height:1.65; margin-top:10px; }
+  .catalog-empty { color:#a9bac6; padding:18px 10px; text-align:center; }
+  @media (max-width:640px) {
+    .catalog-dialog { padding:12px; max-height:88vh; }
+    .catalog-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(180px,1fr); }
+    .catalog-categories { flex-direction:row; max-height:none; overflow-x:auto; padding-bottom:5px; }
+    .catalog-category { white-space:nowrap; }
+    .catalog-results { max-height:42vh; }
+    .catalog-toolbar { flex-wrap:wrap; }
+    .catalog-toolbar input { flex-basis:100%; }
+  }
 </style>
 </head>
 <body>
@@ -816,6 +859,10 @@ HTML_PAGE = r"""<!DOCTYPE html>
       <span class="badge" id="cwd_badge">المسار:<br>/home/root</span>
     </div>
     <div class="hint">الصق أمراً واحداً أو عدة أوامر (Enter للتنفيذ السريع، أو Shift+Enter لسطر جديد):</div>
+    <div class="terminal-tools">
+      <button class="btn b-violet" type="button" onclick="openCommandLibrary()">📚 مكتبة الأوامر</button>
+      <button class="btn b-gray" type="button" onclick="refreshCommandLibrary()">🔄 تحديث المكتبة</button>
+    </div>
     <div class="field"><textarea id="cmd_input" placeholder="opkg update && ls -la /etc/tuxbox/config" onkeydown="handleCmdKey(event)"></textarea></div>
     <div class="row2">
       <button class="btn b-yellow" onclick="runShellCmd()">▶️ تنفيذ الأمر</button>
@@ -827,6 +874,24 @@ HTML_PAGE = r"""<!DOCTYPE html>
   <div class="card console-card">
     <div class="card-head"><span class="card-title">🖥️ سجل العمليات (Console Output)</span></div>
     <div class="console" id="console">Ready... في انتظار تنفيذ الأوامر.</div>
+  </div>
+
+  <div class="catalog-overlay" id="catalog_modal" hidden onclick="if(event.target===this)closeCommandLibrary()">
+    <section class="catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="catalog_title">
+      <div class="card-head">
+        <span class="card-title" id="catalog_title">📚 مكتبة أوامر Online4Tech</span>
+        <button class="btn b-gray" type="button" style="width:auto;min-width:42px" onclick="closeCommandLibrary()">✕</button>
+      </div>
+      <div class="catalog-toolbar">
+        <input id="catalog_search" type="search" placeholder="ابحث عن بلجن أو سكين أو قمر..." oninput="renderCommandLibrary()">
+        <button class="btn b-gray" type="button" style="width:auto" onclick="refreshCommandLibrary()">↻ تحديث المكتبة</button>
+      </div>
+      <div class="catalog-layout">
+        <nav class="catalog-categories" id="catalog_categories" aria-label="تصنيفات المكتبة"></nav>
+        <div class="catalog-results" id="catalog_results"><div class="catalog-empty">اضغط تحديث المكتبة لتحميل الأوامر.</div></div>
+      </div>
+      <div class="catalog-note" id="catalog_note">اختيار أي عنصر يضيف الأمر إلى مربع التيرمنال فقط؛ لن يتم التنفيذ إلا بعد الضغط على «تنفيذ الأمر».</div>
+    </section>
   </div>
 
   <div class="foot">
@@ -930,6 +995,147 @@ HTML_PAGE = r"""<!DOCTYPE html>
     const host = $('host').value.trim(), port = $('port').value.trim(), user = $('user').value.trim(), pass = $('pass').value.trim();
     if (!host || !port || !user || !pass) { log('⚠️ تنبيه: يرجى ملء جميع الحقول (Host, Port, User, Password) أولاً!'); return; }
     call('/api/save', { target, host, port, user, pass }, '⏳ جاري كتابة بيانات الاشتراك...');
+  }
+
+  /* مكتبة أوامر Online4Tech - لا تنفذ الأوامر تلقائياً */
+  let commandCatalog = null;
+  let catalogGroups = {};
+  let activeCatalogCategory = 'plugins';
+  let receiverPythonVersion = '';
+
+  function catalogEscape(value) {
+    return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+  function collectCatalogItems(node, trail, out) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node.tools)) {
+      node.tools.forEach(item => {
+        const command = String(item.install || '').trim();
+        if (command) out.push({
+          name: item.name || 'عنصر بدون اسم',
+          description: item.description || '',
+          command,
+          path: item.path || '',
+          category: trail.join(' / ')
+        });
+      });
+    }
+    if (node.subcategories && typeof node.subcategories === 'object') {
+      Object.keys(node.subcategories).forEach(key => collectCatalogItems(node.subcategories[key], trail.concat(key), out));
+    }
+  }
+  function buildCatalogGroups(data) {
+    const root = data && data.main ? data.main : data;
+    const specs = [
+      ['panels','لوحات الإضافات',root.panels],
+      ['plugins','البلجنات',root.plugins],
+      ['skins','الاسكينات',root.skins],
+      ['picons','البايكونات',root.picons],
+      ['channels','ملفات القنوات والأقمار',root.channels],
+      ['tools','الأدوات والصيانة',root.tools],
+      ['feeds','المكتبات والـ Feeds',root.feeds],
+      ['images','صور الأنظمة',root.images],
+      ['bootlogos','شعارات الإقلاع',root.bootlogos],
+      ['spinners','شاشات التحميل',root.spinners]
+    ];
+    const groups = {};
+    specs.forEach(([id,label,node]) => {
+      const items = [];
+      collectCatalogItems(node, [label], items);
+      if (items.length) groups[id] = {label,items};
+    });
+    return groups;
+  }
+  function isLibraryCompatible(item) {
+    const match = item.name.match(/Libraries[_ -]*(\\d+\\.\\d+)/i);
+    if (!match || !receiverPythonVersion) return true;
+    return receiverPythonVersion.indexOf(match[1]) === 0;
+  }
+  async function refreshCommandLibrary(openAfter) {
+    const status = $('catalog_results');
+    if (status) status.innerHTML = '<div class="catalog-empty">⏳ جاري تحميل وتحديث المكتبة من GitHub...</div>';
+    try {
+      const response = await fetch('/api/catalog?refresh=' + Date.now(), {cache:'no-store'});
+      const payload = await response.json();
+      if (!response.ok || !payload.catalog) throw new Error(payload.error || 'تعذر قراءة ملف المكتبة');
+      commandCatalog = payload.catalog;
+      catalogGroups = buildCatalogGroups(commandCatalog);
+      try {
+        const stats = await (await fetch('/api/stats')).json();
+        receiverPythonVersion = stats.python || '';
+      } catch (e) {}
+      if (!catalogGroups[activeCatalogCategory]) activeCatalogCategory = Object.keys(catalogGroups)[0] || 'plugins';
+      renderCommandLibrary();
+      if (openAfter) $('catalog_modal').hidden = false;
+      const total = Object.values(catalogGroups).reduce((sum, group) => sum + group.items.length, 0);
+      log('✅ تم تحديث مكتبة الأوامر: ' + total + ' أمر متاح.', true);
+    } catch (error) {
+      if (status) status.innerHTML = '<div class="catalog-empty">❌ فشل تحديث المكتبة: ' + catalogEscape(error.message) + '</div>';
+      log('❌ تعذر تحديث مكتبة الأوامر: ' + error.message, true);
+    }
+  }
+  function openCommandLibrary() {
+    $('catalog_modal').hidden = false;
+    $('catalog_search').value = '';
+    if (commandCatalog) renderCommandLibrary();
+    else refreshCommandLibrary(true);
+  }
+  function closeCommandLibrary() { $('catalog_modal').hidden = true; }
+  function selectCatalogCategory(id) {
+    activeCatalogCategory = id;
+    $('catalog_search').value = '';
+    renderCommandLibrary();
+  }
+  function selectCatalogCommand(category, index) {
+    const group = catalogGroups[category];
+    const item = group && group.items[index];
+    if (!item) return;
+    if (category === 'images' || category === 'bootlogos') {
+      if (!confirm('تنبيه مهم: هذا الأمر مرتبط بملفات صورة/إقلاع وقد يغيّر ملفات النظام أو صورة الرسيفر. تأكد من الموديل والتوافق وخذ نسخة احتياطية. هل تريد وضع الأمر في التيرمنال؟')) return;
+    }
+    if (/Libraries[_ -]*\\d+\\.\\d+/i.test(item.name) && !isLibraryCompatible(item)) {
+      alert('إصدار المكتبة لا يطابق Python الموجود على الرسيفر (' + (receiverPythonVersion || 'غير معروف') + ').');
+      return;
+    }
+    $('cmd_input').value = item.command;
+    closeCommandLibrary();
+    $('cmd_input').focus();
+    log('📌 تم وضع أمر (' + item.name + ') في مربع التيرمنال. راجعه قبل التنفيذ.', true);
+  }
+  function renderCommandLibrary() {
+    const cats = $('catalog_categories'), results = $('catalog_results');
+    if (!cats || !results) return;
+    cats.innerHTML = Object.keys(catalogGroups).map(id => {
+      const group = catalogGroups[id];
+      let count = group.items.filter(item => id !== 'feeds' || isLibraryCompatible(item) || !/Libraries[_ -]*\\d+\\.\\d+/i.test(item.name)).length;
+      return '<button type="button" class="catalog-category ' + (id === activeCatalogCategory ? 'active' : '') + '" onclick="selectCatalogCategory(\\'' + id + '\\')">' +
+        catalogEscape(group.label) + ' <small>(' + count + ')</small></button>';
+    }).join('');
+    const group = catalogGroups[activeCatalogCategory];
+    if (!group) { results.innerHTML = '<div class="catalog-empty">لا توجد أوامر في هذا القسم.</div>'; return; }
+    const query = ($('catalog_search').value || '').trim().toLowerCase();
+    const items = group.items.filter(item => {
+      if (activeCatalogCategory === 'feeds' && /Libraries[_ -]*\\d+\\.\\d+/i.test(item.name) && !isLibraryCompatible(item)) return false;
+      return !query || (item.name + ' ' + item.description + ' ' + item.category).toLowerCase().includes(query);
+    });
+    if (!items.length) {
+      const isLibGroup = activeCatalogCategory === 'feeds' && /libraries|مكتبات/i.test(query);
+      results.innerHTML = '<div class="catalog-empty">' +
+        (isLibGroup && receiverPythonVersion ? 'لا توجد حزمة مكتبات مسجلة في الكتالوج متوافقة مع Python ' + catalogEscape(receiverPythonVersion) + '. لم نعرض مكتبات 3.12 على جهاز Python 3.13.' : 'لا توجد نتائج مطابقة.') +
+        '</div>';
+      return;
+    }
+    results.innerHTML = items.map(item => {
+      const index = group.items.indexOf(item);
+      return '<button type="button" class="catalog-item" onclick="selectCatalogCommand(\\'' + activeCatalogCategory + '\\',' + index + ')">' +
+        '<b>' + catalogEscape(item.name) + '</b><small>' + catalogEscape(item.description) + '</small></button>';
+    }).join('');
+    const note = $('catalog_note');
+    if (note) note.textContent = activeCatalogCategory === 'images'
+      ? 'صور الأنظمة: أوامر قد تغيّر نظام الرسيفر. تأكد من موديل الجهاز والتوافق قبل نقل الأمر إلى التيرمنال. الاختيار لا ينفّذ الأمر.'
+      : activeCatalogCategory === 'feeds'
+        ? 'المكتبات والـ Feeds: يتم إخفاء حزم Python غير المطابقة لإصدار Python المكتشف على الرسيفر. الاختيار يملأ التيرمنال فقط.'
+        : 'اختيار أي عنصر يضيف الأمر إلى مربع التيرمنال فقط؛ لن يتم التنفيذ إلا بعد الضغط على «تنفيذ الأمر».';
   }
 
   /* التيرمنال */
@@ -1349,6 +1555,19 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
+        elif self.path.startswith("/api/catalog"):
+            try:
+                req = urllib.request.Request(CATALOG_URL, headers={"User-Agent": "Online4Tech-ControlCenter"})
+                with urllib.request.urlopen(req, timeout=25) as response:
+                    raw_catalog = response.read(3 * 1024 * 1024 + 1)
+                if len(raw_catalog) > 3 * 1024 * 1024:
+                    raise ValueError("ملف المكتبة أكبر من الحد المسموح.")
+                catalog = json.loads(raw_catalog.decode("utf-8"))
+                if not isinstance(catalog, dict):
+                    raise ValueError("صيغة ملف المكتبة غير صحيحة.")
+                self._json({"catalog": catalog})
+            except Exception as error:
+                self._json({"error": "تعذر تحميل المكتبة: %s" % error}, 502)
         elif self.path == "/api/stats":
             self._json(get_stats())
         else:

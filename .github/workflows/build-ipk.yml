@@ -1,0 +1,68 @@
+name: Build Enigma2 IPK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugin/**'
+      - 'VERSION'
+      - '.github/workflows/build-ipk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout stable source
+        uses: actions/checkout@v4
+
+      - name: Build IPK package
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="enigma2-plugin-extensions-onlinewebcontrol"
+          VER="$(tr -d '\r\n' < VERSION)"
+          ROOT="$PWD/pkg"
+          mkdir -p "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl"
+          cp plugin/plugin.py plugin/online_web_control.py plugin/__init__.py "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/"
+          cp VERSION "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/VERSION"
+          mkdir -p "$ROOT/control"
+          cat > "$ROOT/control/control" <<EOF
+          Package: $PKG
+          Version: $VER
+          Architecture: all
+          Maintainer: Online4Tech
+          Section: extra
+          Priority: optional
+          Depends: python3-core
+          Description: Online4Tech Control Center for Enigma2
+           Web control panel with command library, plugin and skin catalog tools.
+          EOF
+          cat > "$ROOT/control/postinst" <<'EOF'
+          #!/bin/sh
+          chmod 0644 /usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/*.py 2>/dev/null || true
+          exit 0
+          EOF
+          cat > "$ROOT/control/prerm" <<'EOF'
+          #!/bin/sh
+          exit 0
+          EOF
+          chmod 0755 "$ROOT/control/postinst" "$ROOT/control/prerm"
+          (cd "$ROOT/data" && tar --numeric-owner --owner=0 --group=0 -czf "$OLDPWD/data.tar.gz" .)
+          (cd "$ROOT/control" && tar --numeric-owner --owner=0 --group=0 -czf "$OLDPWD/control.tar.gz" .)
+          printf '2.0\n' > debian-binary
+          ar r "$PKG-$VER.ipk" debian-binary control.tar.gz data.tar.gz
+          mkdir -p dist
+          mv "$PKG-$VER.ipk" dist/
+          sha256sum "dist/$PKG-$VER.ipk" | tee dist/SHA256SUMS
+          echo "Built $PKG-$VER.ipk"
+      - name: Upload installable IPK
+        uses: actions/upload-artifact@v4
+        with:
+          name: online4tech-control-center-ipk
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 90

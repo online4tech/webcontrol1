@@ -51,6 +51,19 @@ echo "Plugin path: $PLUGIN_DIR"
 echo "Panel port: 7070"
 echo "Python: $PYTHON_BIN"
 echo ""
-echo "Restart the Enigma2 GUI from the receiver menu."
+echo "Enigma2 GUI restart will start automatically in a few seconds."
 echo "Then open: http://RECEIVER-IP:7070"
 echo "Security: anyone on your local network may access and control this panel. Do not expose port 7070 to the Internet."
+
+# Restart only the Enigma2 GUI (not the whole receiver), after this installer exits.
+if command -v init >/dev/null 2>&1; then
+    (
+        sleep 3
+        init 4
+        sleep 3
+        init 3
+    ) >/dev/null 2>&1 </dev/null &
+    echo "Automatic GUI restart scheduled (init 4 -> init 3)."
+else
+    echo "WARNING: init command not found; please restart the Enigma2 GUI manually."
+fi

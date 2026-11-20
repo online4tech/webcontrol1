@@ -28,7 +28,7 @@ AUTH_PASS = ""
 # روابط الأزرار السفلية (حط روابطك هنا)
 SUPPORT_URL = "https://m.me/ahmad.m.romeh"
 SITE_URL    = "https://online4tech.github.io/online4Tech/"
-STORE_URL   = "https://sllr.co/dreamoxegypt"
+STORE_URL   = "https://sllr.co/online4tech"
 
 # رابط تحديث اللوحة (ملف السكربت نفسه) - اتركه فارغاً لتعطيل الزر
 PANEL_UPDATE_URL = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/plugin/online_web_control.py"

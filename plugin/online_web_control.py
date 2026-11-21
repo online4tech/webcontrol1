@@ -880,6 +880,85 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .btn { min-height: 40px !important; padding: 8px 9px !important; font-size: .86rem !important; }
     .console { min-height: 140px !important; max-height: 240px !important; }
   }
+
+  /* Online4Tech O4T brand system — final overrides after legacy rules */
+  :root {
+    color-scheme: dark;
+    --bg: #061426;
+    --card: #0d2239;
+    --line: #1d496b;
+    --gold: #42d5ff;
+    --gold-soft: rgba(0, 200, 240, .10);
+    --gold-line: rgba(0, 200, 240, .34);
+    --text: #f4f9ff;
+    --muted: #a9c5da;
+    --field: #081a2c;
+    --o4t-blue: #087fbd;
+    --o4t-cyan: #00c8f0;
+    --o4t-red: #e52d55;
+  }
+  html { background: #061426 !important; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% -12%, rgba(0, 160, 220, .22), transparent 48%),
+      radial-gradient(ellipse at 100% 30%, rgba(12, 71, 119, .16), transparent 42%),
+      #061426 !important;
+    color: var(--text) !important;
+  }
+  .head {
+    border: 1px solid rgba(0, 200, 240, .34) !important;
+    border-top: 3px solid var(--o4t-cyan) !important;
+    background: linear-gradient(135deg, #102b49 0%, #091a2c 78%) !important;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .34), 0 0 24px rgba(0, 160, 220, .08) !important;
+  }
+  .brand-banner-img { filter: drop-shadow(0 7px 20px rgba(0, 174, 239, .24)) !important; }
+  .head h1, .card-title, .stat .v, .pill b, .power b { color: #42d5ff !important; }
+  .brand-tagline, .footer-title { color: #b9eaff !important; text-shadow: none !important; }
+  .stat, .card {
+    background: linear-gradient(145deg, #102b45 0%, #0b1c30 100%) !important;
+    border-color: #1d496b !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .24) !important;
+  }
+  .card-head { border-color: rgba(91, 160, 198, .24) !important; }
+  .badge {
+    color: #70e2ff !important;
+    background: rgba(0, 200, 240, .09) !important;
+    border-color: rgba(0, 200, 240, .30) !important;
+  }
+  input, textarea {
+    color: #f4f9ff !important;
+    background: #071a2d !important;
+    border-color: #28516f !important;
+  }
+  input::placeholder, textarea::placeholder { color: #7899b2 !important; }
+  input:focus, textarea:focus { outline-color: #00c8f0 !important; border-color: #00c8f0 !important; }
+  .b-yellow, .b-amber { background: linear-gradient(135deg, #087fbd, #00a9d8) !important; color: #fff !important; }
+  .b-blue, .b-sky { background: linear-gradient(135deg, #075b91, #0d91cf) !important; }
+  .b-red, .b-rose { background: linear-gradient(135deg, #b91e45, #e52d55) !important; }
+  .b-green, .b-emerald { background: linear-gradient(135deg, #087b59, #10a875) !important; }
+  .b-teal { background: linear-gradient(135deg, #087e91, #10a9bd) !important; }
+  .b-gray, .pill-dark { background: linear-gradient(135deg, #142d43, #102236) !important; }
+  .console {
+    color: #a9f0d0 !important;
+    background: #040e19 !important;
+    border-color: #21435c !important;
+  }
+  .pill-green { background: linear-gradient(135deg, #087b59, #10a875) !important; }
+  .pill-dark { border-color: #28516f !important; }
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid #00c8f0 !important;
+    outline-offset: 3px !important;
+  }
+  @media (max-width: 640px) {
+    .head { border-radius: 16px !important; padding: 14px 10px !important; }
+    .brand-banner-img { width: min(310px, 94%) !important; max-height: 92px !important; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .card { border-radius: 15px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+
 </style>
 </head>
 <body>

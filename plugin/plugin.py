@@ -14,7 +14,7 @@ from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
-from enigma import ePicLoad
+from enigma import ePicLoad, gRGB
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(PLUGIN_DIR, "assets")
@@ -331,20 +331,14 @@ class OnlineWebControlScreen(Screen):
         <widget name="howto" position="42,380" size="716,32" font="Regular;16" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
 
         <!-- Glossy circular remote buttons -->
-        <eLabel position="119,430" size="126,126" backgroundColor="#075B43" cornerRadius="63" />
-        <eLabel position="125,436" size="114,114" backgroundColor="#10A875" cornerRadius="57" />
-        <eLabel position="137,443" size="90,28" backgroundColor="#37DDA6" cornerRadius="14" />
-        <widget name="green" position="125,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
+        <eLabel position="119,438" size="126,104" backgroundColor="#087B59" />
+        <widget name="green" position="125,444" size="114,92" font="Regular;21" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#087B59" />
 
-        <eLabel position="337,430" size="126,126" backgroundColor="#791D39" cornerRadius="63" />
-        <eLabel position="343,436" size="114,114" backgroundColor="#D52C55" cornerRadius="57" />
-        <eLabel position="355,443" size="90,28" backgroundColor="#FF7791" cornerRadius="14" />
-        <widget name="red" position="343,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
+        <eLabel position="337,438" size="126,104" backgroundColor="#C51F49" />
+        <widget name="red" position="343,444" size="114,92" font="Regular;21" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#C51F49" />
 
-        <eLabel position="555,430" size="126,126" backgroundColor="#88600A" cornerRadius="63" />
-        <eLabel position="561,436" size="114,114" backgroundColor="#E8B323" cornerRadius="57" />
-        <eLabel position="573,443" size="90,28" backgroundColor="#FFE27A" cornerRadius="14" />
-        <widget name="yellow" position="561,454" size="114,74" font="Regular;18" halign="center" valign="center" foregroundColor="#152238" />
+        <eLabel position="555,438" size="126,104" backgroundColor="#D9A719" />
+        <widget name="yellow" position="561,444" size="114,92" font="Regular;20" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#D9A719" />
 
         <widget name="hint" position="30,562" size="740,20" font="Regular;12" halign="center" valign="center" foregroundColor="#789DBA" backgroundColor="#061426" />
         <widget name="footer" position="30,583" size="740,14" font="Regular;10" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
@@ -365,9 +359,9 @@ class OnlineWebControlScreen(Screen):
         self["port_label"] = Label("منفذ تشغيل لوحة الويب")
         self["port_value"] = Label(str(PORT))
         self["howto"] = Label("افتح العنوان الظاهر بعد تشغيل اللوحة من أي جهاز على نفس شبكة المنزل")
-        self["green"] = Label("▶\nتشغيل")
-        self["red"] = Label("■\nإيقاف")
-        self["yellow"] = Label("↻\nتحديث")
+        self["green"] = Label("تشغيل")
+        self["red"] = Label("إيقاف")
+        self["yellow"] = Label("تحديث")
         self["hint"] = Label("الأخضر: تشغيل الخدمة     •     الأحمر: إيقاف الخدمة     •     الأصفر: تحديث البلجن")
         self["footer"] = Label("ONLINE4TECH  •  VERSION %s" % (VERSION or "N/A"))
         self["actions"] = ActionMap(

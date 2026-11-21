@@ -65,8 +65,8 @@ SELF_PATH = os.path.abspath(__file__)
 # صور اللوجو: تتحمّل مرة واحدة من GitHub وتتحفظ محلياً على الرسيفر لسرعة الفتح
 BRAND_ASSETS_DIR = os.path.join(os.path.dirname(SELF_PATH), "assets")
 BRAND_ASSETS = {
-    "banner.svg": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.svg",
-    "icon.svg":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.svg",
+    "o4t_banner.png": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.png",
+    "o4t_icon.png":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.png",
 }
 # ==========================================================
 
@@ -206,7 +206,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <title>online4tech | Web Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/o4t_icon.png">
 <link rel="apple-touch-icon" href="/assets/icon.svg">
 <style>
   :root {
@@ -794,6 +794,38 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .catalog-toolbar { flex-wrap:wrap; }
     .catalog-toolbar input { flex-basis:100%; }
   }
+
+  /* Official Online4Tech brand system — navy / blue / cyan / red */
+  :root {
+    --bg:#071321; --card:#101f30; --line:#263e54;
+    --gold:#55c8f2; --gold-soft:rgba(41,166,220,.14);
+    --gold-line:rgba(85,200,242,.34); --text:#edf7ff;
+    --muted:#a8bfd0; --field:#091725;
+  }
+  html,body { background:#071321; color:#edf7ff; }
+  body { background:radial-gradient(ellipse at 50% -12%,#153c5b 0%,#0a1b2d 42%,#071321 78%); }
+  .head { background:linear-gradient(135deg,#102c45,#0a1929 78%); border-color:#245477; }
+  .brand-banner-img { width:min(520px,92%); max-height:150px; filter:drop-shadow(0 8px 22px rgba(0,174,239,.25)); }
+  .head h1,.card-title,.stat .v,.brand-tagline,.footer-title,.power b { color:#63d4ff; }
+  .brand-tagline { text-shadow:0 0 18px rgba(44,184,242,.18); }
+  .stat,.card { background:linear-gradient(145deg,#12283b,#0d1c2b); border-color:#29445b; }
+  .badge { color:#8cddff; background:rgba(31,143,199,.13); border-color:rgba(76,190,239,.35); }
+  .btn { border:1px solid rgba(110,205,246,.15); }
+  .b-yellow,.b-amber { background:linear-gradient(135deg,#087db6,#20b7e8); color:#fff; }
+  .b-blue,.b-sky,.b-indigo,.b-oscam { background:linear-gradient(135deg,#07558d,#138ed0); color:#fff; }
+  .b-green,.b-emerald,.b-teal { background:linear-gradient(135deg,#087b70,#12a98e); color:#fff; }
+  .b-red,.b-rose { background:linear-gradient(135deg,#a91d3d,#e33b58); color:#fff; }
+  .b-violet,.b-ncam { background:linear-gradient(135deg,#4543a6,#6c70d8); color:#fff; }
+  .b-gray { background:linear-gradient(135deg,#273c50,#38566d); color:#fff; }
+  input,textarea { background:#081725; border-color:#29465d; color:#f3faff; }
+  input:focus,textarea:focus { outline:1px solid #48c8f4; border-color:#48c8f4; }
+  .console { background:#050e18; border-color:#29445b; }
+  .pill-dark { background:#102438; border-color:#29445b; }
+  .pill-green { background:linear-gradient(135deg,#087b70,#12a98e); }
+  .power { color:#93aabd; }
+  .brand-banner-wrap { margin-bottom:12px; }
+  @media(max-width:640px) { .brand-banner-img { width:min(340px,96%); max-height:105px; } }
+
 </style>
 </head>
 <body>
@@ -801,7 +833,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   <div class="head">
     <div class="brand-banner-wrap">
-      <img class="brand-banner-img" src="/assets/banner.svg" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
+      <img class="brand-banner-img" src="/assets/o4t_banner.png" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
     </div>
     <div id="o4t_fallback_logo" style="display:none">
       <div class="logo" role="img" aria-label="Online4Tech">

@@ -334,20 +334,20 @@ class OnlineWebControlScreen(Screen):
         <eLabel position="119,430" size="126,126" backgroundColor="#075B43" cornerRadius="63" />
         <eLabel position="125,436" size="114,114" backgroundColor="#10A875" cornerRadius="57" />
         <eLabel position="137,443" size="90,28" backgroundColor="#37DDA6" cornerRadius="14" />
-        <widget name="green" position="125,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
+        <widget name="green" position="125,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
 
         <eLabel position="337,430" size="126,126" backgroundColor="#791D39" cornerRadius="63" />
         <eLabel position="343,436" size="114,114" backgroundColor="#D52C55" cornerRadius="57" />
         <eLabel position="355,443" size="90,28" backgroundColor="#FF7791" cornerRadius="14" />
-        <widget name="red" position="343,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
+        <widget name="red" position="343,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
 
         <eLabel position="555,430" size="126,126" backgroundColor="#88600A" cornerRadius="63" />
         <eLabel position="561,436" size="114,114" backgroundColor="#E8B323" cornerRadius="57" />
         <eLabel position="573,443" size="90,28" backgroundColor="#FFE27A" cornerRadius="14" />
-        <widget name="yellow" position="561,454" size="114,74" font="Regular;18" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
+        <widget name="yellow" position="561,454" size="114,74" font="Regular;18" halign="center" valign="center" foregroundColor="#152238" />
 
         <widget name="hint" position="30,562" size="740,20" font="Regular;12" halign="center" valign="center" foregroundColor="#789DBA" backgroundColor="#061426" />
-        <widget name="footer" position="30,581" size="740,14" font="Regular;10" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
+        <widget name="footer" position="30,583" size="740,14" font="Regular;10" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
     </screen>
     """
 
@@ -419,13 +419,13 @@ class OnlineWebControlScreen(Screen):
         if running:
             self["status"].setText("●  لوحة التحكم تعمل الآن")
             try:
-                self["status"].instance.setForegroundColor(parseColor("#35E6A2"))
+                self["status"].instance.setForegroundColor(gRGB(0x35E6A2))
             except Exception:
                 pass
         else:
             self["status"].setText("●  لوحة التحكم متوقفة")
             try:
-                self["status"].instance.setForegroundColor(parseColor("#FF6685"))
+                self["status"].instance.setForegroundColor(gRGB(0xFF6685))
             except Exception:
                 pass
         self["ip_value"].setText(get_ip())

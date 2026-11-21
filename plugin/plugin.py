@@ -293,55 +293,33 @@ def update_plugin(session):
 
 class OnlineWebControlScreen(Screen):
     skin = """
-    <screen name="OnlineWebControlScreen" position="center,center" size="820,620"
+    <screen name="OnlineWebControlScreen" position="center,center" size="800,600"
         title="Online4Tech Control Center" flags="wfNoBorder" backgroundColor="#061326">
-        <eLabel position="0,0" size="820,4" backgroundColor="#00BDF2" />
-        <eLabel position="0,618" size="820,2" backgroundColor="#1E4E79" />
-        <eLabel position="0,0" size="2,620" backgroundColor="#1E4E79" />
-        <eLabel position="818,0" size="2,620" backgroundColor="#1E4E79" />
-
-        <eLabel position="2,4" size="816,190" backgroundColor="#081A31" />
-        <widget name="banner" position="145,8" size="530,176" alphatest="blend" />
-        <widget name="brand" position="24,176" size="772,36"
-            font="Regular;28" halign="center" valign="center"
-            foregroundColor="#FFFFFF" backgroundColor="#081A31" />
-        <widget name="tagline" position="24,212" size="772,28"
-            font="Regular;18" halign="center" valign="center"
-            foregroundColor="#F5C542" backgroundColor="#081A31" />
-
-        <eLabel position="38,250" size="744,76" backgroundColor="#0D223B" />
-        <widget name="description" position="52,256" size="716,64"
-            font="Regular;18" halign="center" valign="center"
-            foregroundColor="#DCEBFA" backgroundColor="#0D223B" />
-
-        <eLabel position="38,340" size="744,98" backgroundColor="#102A45" />
-        <eLabel position="38,340" size="744,3" backgroundColor="#168FD0" />
-        <widget name="status" position="54,348" size="712,38"
-            font="Regular;24" halign="center" valign="center"
-            foregroundColor="#FFFFFF" backgroundColor="#102A45" />
-        <widget name="address" position="54,390" size="712,38"
-            font="Regular;22" halign="center" valign="center"
-            foregroundColor="#62D8FF" backgroundColor="#102A45" />
-
-        <widget name="howto" position="40,446" size="740,52"
-            font="Regular;17" halign="center" valign="center"
-            foregroundColor="#F6D36B" backgroundColor="#061326" />
-        <widget name="hint" position="40,498" size="740,26"
-            font="Regular;16" halign="center" valign="center"
-            foregroundColor="#9DB9D3" backgroundColor="#061326" />
-
-        <eLabel position="38,536" size="230,4" backgroundColor="#34D399" />
-        <widget name="green" position="38,540" size="230,58"
-            font="Regular;21" halign="center" valign="center"
-            foregroundColor="#FFFFFF" backgroundColor="#12804D" />
-        <eLabel position="295,536" size="230,4" backgroundColor="#FB7185" />
-        <widget name="red" position="295,540" size="230,58"
-            font="Regular;21" halign="center" valign="center"
-            foregroundColor="#FFFFFF" backgroundColor="#BE263E" />
-        <eLabel position="552,536" size="230,4" backgroundColor="#FDE047" />
-        <widget name="yellow" position="552,540" size="230,58"
-            font="Regular;19" halign="center" valign="center"
-            foregroundColor="#0B131E" backgroundColor="#EAB308" />
+        <eLabel position="0,0" size="800,5" backgroundColor="#00BDF2" />
+        <eLabel position="0,595" size="800,5" backgroundColor="#174B75" />
+        <eLabel position="0,0" size="3,600" backgroundColor="#174B75" />
+        <eLabel position="797,0" size="3,600" backgroundColor="#174B75" />
+        <eLabel position="3,5" size="794,176" backgroundColor="#081A31" />
+        <eLabel position="3,178" size="794,3" backgroundColor="#087EBA" />
+        <widget name="banner" position="170,8" size="460,153" alphatest="blend" />
+        <widget name="brand" position="30,112" size="740,38" font="Regular;27" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#081A31" />
+        <widget name="tagline" position="30,148" size="740,25" font="Regular;17" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#081A31" />
+        <eLabel position="34,202" size="732,68" backgroundColor="#0D223B" />
+        <eLabel position="34,202" size="5,68" backgroundColor="#00BDF2" />
+        <widget name="description" position="54,210" size="692,52" font="Regular;18" halign="center" valign="center" foregroundColor="#E5F1FA" backgroundColor="#0D223B" />
+        <eLabel position="34,288" size="732,118" backgroundColor="#102A45" />
+        <eLabel position="34,288" size="732,4" backgroundColor="#168FD0" />
+        <widget name="status" position="55,300" size="690,42" font="Regular;26" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#102A45" />
+        <widget name="address" position="55,346" size="690,50" font="Regular;19" halign="center" valign="center" foregroundColor="#72DFFF" backgroundColor="#102A45" />
+        <widget name="howto" position="45,416" size="710,42" font="Regular;17" halign="center" valign="center" foregroundColor="#DCEBFA" backgroundColor="#061326" />
+        <widget name="hint" position="45,458" size="710,25" font="Regular;15" halign="center" valign="center" foregroundColor="#8EABC5" backgroundColor="#061326" />
+        <eLabel position="34,500" size="226,4" backgroundColor="#34D399" />
+        <widget name="green" position="34,504" size="226,60" font="Regular;20" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#087B50" />
+        <eLabel position="287,500" size="226,4" backgroundColor="#FB7185" />
+        <widget name="red" position="287,504" size="226,60" font="Regular;20" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#A91F39" />
+        <eLabel position="540,500" size="226,4" backgroundColor="#FACC15" />
+        <widget name="yellow" position="540,504" size="226,60" font="Regular;18" halign="center" valign="center" foregroundColor="#101827" backgroundColor="#EAB308" />
+        <widget name="footer" position="35,568" size="730,20" font="Regular;13" halign="center" valign="center" foregroundColor="#6486A4" backgroundColor="#061326" />
     </screen>
     """
 
@@ -359,7 +337,7 @@ class OnlineWebControlScreen(Screen):
         self["green"] = Label("تشغيل اللوحة  |  الأخضر")
         self["red"] = Label("إيقاف اللوحة  |  الأحمر")
         self["yellow"] = Label("تحديث البلجن  |  الأصفر")
-        self["footer"] = Label("Online4Tech  •  لوحة محلية آمنة للاستخدام داخل الشبكة فقط")
+        self["footer"] = Label("ONLINE4TECH  •  LOCAL WEB CONTROL  •  VERSION %s" % (VERSION or "N/A"))
         self["actions"] = ActionMap(
             ["ColorActions", "OkCancelActions"],
             {
@@ -388,7 +366,7 @@ class OnlineWebControlScreen(Screen):
                 return
             w = self["banner"].instance.size().width()
             h = self["banner"].instance.size().height()
-            self.picload.setPara((w, h, 1, 1, False, 1, "#0B192C"))
+            self.picload.setPara((w, h, 0, 0, False, 1, "#081A31"))
             self.picload.startDecode(BRAND_BANNER_PATH)
         except Exception as error:
             print("[OnlineWebControl] Banner load error: %s" % error)
@@ -400,6 +378,7 @@ class OnlineWebControlScreen(Screen):
                 self["banner"].instance.setPixmap(ptr)
                 self["banner"].show()
                 self["brand"].hide()
+                self["tagline"].hide()
         except Exception as error:
             print("[OnlineWebControl] Banner render error: %s" % error)
 
@@ -407,8 +386,9 @@ class OnlineWebControlScreen(Screen):
         running = is_running()
         state = "● اللوحة تعمل الآن" if running else "● اللوحة متوقفة"
         self["status"].setText(state)
-        self["address"].setText("IP الجهاز: %s       |       Port: %d       |       http://%s:%d" % (get_ip(), PORT, get_ip(), PORT))
-        self["hint"].setText("الإصدار %s  •  OK لتحديث الحالة  •  EXIT للخروج" % (VERSION or "غير معروف"))
+        ip = get_ip()
+        self["address"].setText("عنوان اللوحة:  http://%s:%d" % (ip, PORT))
+        self["hint"].setText("IP: %s    |    PORT: %d    •    الإصدار %s    •    OK تحديث الحالة" % (ip, PORT, VERSION or "غير معروف"))
 
     def do_start(self):
         start_server()

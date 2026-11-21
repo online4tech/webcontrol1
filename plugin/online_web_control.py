@@ -1111,6 +1111,105 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .card,.btn {transition:none !important}
   }
 
+
+  /* Online4Tech centered single-column layout: same reading flow on desktop and mobile. */
+  html, body { width:100%; min-height:100%; }
+  body {
+    padding:18px 12px 30px !important;
+    display:flex !important;
+    justify-content:center !important;
+    align-items:flex-start !important;
+  }
+  .wrap {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    width:min(100%, 740px) !important;
+    max-width:740px !important;
+    min-height:0 !important;
+    margin:0 auto !important;
+    gap:14px !important;
+  }
+  .wrap > .head, .wrap > .stats, .wrap > .card, .wrap > .foot {
+    display:block;
+    width:100% !important;
+    max-width:100% !important;
+    grid-column:auto !important;
+    grid-row:auto !important;
+    flex:none !important;
+    height:auto !important;
+  }
+  .head {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:10px !important;
+    min-height:0 !important;
+    padding:22px 18px !important;
+    text-align:center !important;
+    overflow:visible !important;
+  }
+  .brand-banner-wrap {
+    display:flex !important;
+    width:100% !important;
+    justify-content:center !important;
+    align-items:center !important;
+    margin:0 auto 8px !important;
+    padding:0 !important;
+  }
+  .brand-banner-img {
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:min(100%, 430px) !important;
+    max-width:100% !important;
+    max-height:125px !important;
+    height:auto !important;
+    object-fit:contain !important;
+    object-position:center !important;
+  }
+  #o4t_fallback_logo {
+    width:100%;
+    text-align:center;
+    grid-column:auto !important;
+    grid-row:auto !important;
+  }
+  .head h1 {
+    width:100%;
+    max-width:none !important;
+    grid-column:auto !important;
+    grid-row:auto !important;
+    text-align:center !important;
+    font-size:1.12rem !important;
+  }
+  .head h1:after { margin-inline:auto !important; }
+  .stats {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:10px !important;
+    margin:0 !important;
+  }
+  .stat { width:100%; min-height:68px !important; }
+  .card {
+    align-self:stretch !important;
+    margin:0 !important;
+    padding:17px !important;
+  }
+  .quick-card,.iptv-card,.emu-card,.channels-card,.cccam-card,.terminal-card,.console-card {
+    grid-column:auto !important;
+    width:100% !important;
+  }
+  .foot { margin:0 !important; }
+  @media (max-width:640px) {
+    body { padding:9px 9px 20px !important; }
+    .wrap { width:100% !important; max-width:520px !important; gap:10px !important; }
+    .head { padding:17px 12px !important; }
+    .brand-banner-img { width:min(100%,360px) !important; max-height:100px !important; }
+    .stats { grid-template-columns:minmax(0,1fr) !important; gap:8px !important; }
+    .card { padding:14px !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -1118,7 +1217,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   <div class="head">
     <div class="brand-banner-wrap">
-      <img class="brand-banner-img" src="/assets/banner.png" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
+      <img class="brand-banner-img" src="/assets/banner.png?v=20261121" alt="Online4Tech — خليك دايما اونلاين" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t-main-logo.png?v=20261121';}else{this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';}">
     </div>
     <div id="o4t_fallback_logo" style="display:none">
       <div class="logo" role="img" aria-label="Online4Tech">

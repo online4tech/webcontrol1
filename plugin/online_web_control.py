@@ -825,6 +825,61 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .head { padding:14px 8px !important; }
     .brand-banner-img { width:min(420px,98%) !important; max-height:none !important; }
   }
+
+  /* Online4Tech desktop compact density pass — preserve existing grid and visual identity */
+  @media (min-width: 981px) {
+    html { font-size: 14px; }
+    body { padding: 10px clamp(12px, 1.5vw, 24px) 18px !important; }
+    .wrap {
+      max-width: 1480px !important;
+      gap: 11px !important;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+      align-items: start !important;
+    }
+    .head { padding: 10px 16px 9px !important; border-radius: 15px !important; }
+    .brand-banner-wrap { margin-bottom: 3px !important; }
+    .brand-banner-img { width: min(390px, 78%) !important; max-height: 76px !important; }
+    .head h1 { font-size: .88rem !important; line-height: 1.35 !important; }
+    .stats { gap: 9px !important; }
+    .stat { padding: 8px 12px !important; border-radius: 12px !important; }
+    .stat .k { font-size: .70rem !important; }
+    .stat .v { font-size: .88rem !important; margin-top: 3px !important; }
+    .card { padding: 12px 14px !important; border-radius: 14px !important; }
+    .card-head { margin-bottom: 9px !important; padding-bottom: 7px !important; }
+    .card-title { font-size: .96rem !important; line-height: 1.4 !important; }
+    .badge { padding: 3px 8px !important; font-size: .62rem !important; }
+    .card .stack { gap: 7px !important; }
+    .btn { min-height: 36px !important; padding: 7px 9px !important; font-size: .82rem !important; line-height: 1.35 !important; border-radius: 9px !important; }
+    .hint { font-size: .72rem !important; line-height: 1.45 !important; margin: 1px 0 6px !important; }
+    .field { gap: 3px !important; margin-bottom: 7px !important; }
+    .field label { font-size: .74rem !important; }
+    input, textarea { padding: 8px 9px !important; font-size: .82rem !important; border-radius: 8px !important; }
+    .compact-fields { gap: 7px !important; }
+    .compact-fields .field { margin-bottom: 6px !important; }
+    .compact-fields input { min-height: 34px !important; padding: 6px 8px !important; }
+    .row2 { gap: 7px !important; }
+    .terminal-tools { gap: 7px !important; margin-bottom: 7px !important; }
+    .terminal-tools .btn { min-width: 110px !important; }
+    .terminal-card textarea { min-height: 112px !important; }
+    .console { min-height: 112px !important; max-height: 190px !important; padding: 9px 11px !important; font-size: .74rem !important; line-height: 1.4 !important; }
+    .foot { margin-top: 0 !important; }
+    .pill { padding: 9px 12px !important; font-size: .84rem !important; }
+    .power { font-size: .68rem !important; margin-top: 8px !important; }
+    .footer-title { font-size: .96rem !important; margin-bottom: 7px !important; }
+    .contact-links, .store-links { gap: 8px !important; margin-bottom: 7px !important; }
+    .contact-links .pill { min-height: 42px !important; }
+    .contact-links svg { width: 21px !important; height: 21px !important; }
+  }
+  @media (min-width: 641px) and (max-width: 980px) {
+    body { padding: 12px 12px 20px !important; }
+    .wrap { gap: 12px !important; }
+    .head { padding: 14px 16px !important; }
+    .brand-banner-img { width: min(430px, 88%) !important; max-height: 100px !important; }
+    .card { padding: 14px !important; }
+    .card-head { margin-bottom: 11px !important; padding-bottom: 8px !important; }
+    .btn { min-height: 40px !important; padding: 8px 9px !important; font-size: .86rem !important; }
+    .console { min-height: 140px !important; max-height: 240px !important; }
+  }
 </style>
 </head>
 <body>

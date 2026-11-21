@@ -449,7 +449,7 @@ def ensure_plugin_icon():
 def Plugins(**kwargs):
     ensure_plugin_icon()
     return [PluginDescriptor(name="Online4Tech Control Center",
-                             description="Online4Tech receiver control and GitHub updater (port %d)" % PORT,
+                             description="إدارة لوحة Online4Tech: تشغيل وإيقاف ومتابعة IP والبورت %d" % PORT,
                              where=PluginDescriptor.WHERE_PLUGINMENU,
                              icon=PLUGIN_ICON,
                              fnc=main)]

@@ -23,10 +23,10 @@ PORT = 7070
 PID_FILE = "/tmp/online_web_control.pid"
 
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/"
-BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t_banner.png"
-BRAND_ICON_URL = GITHUB_RAW_BASE + "assets/o4t_icon.png"
-BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "banner.png")
-BRAND_ICON_PATH = os.path.join(ASSETS_DIR, "icon.png")
+BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t_banner.svg"
+BRAND_ICON_URL = GITHUB_RAW_BASE + "assets/o4t_icon.svg"
+BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "banner.svg")
+BRAND_ICON_PATH = os.path.join(ASSETS_DIR, "icon.svg")
 PLUGIN_ICON = os.path.join(PLUGIN_DIR, "plugin.png")
 BRAND_SYNC_FLAG = os.path.join(ASSETS_DIR, ".o4t_brand_v1")
 
@@ -95,7 +95,7 @@ def sync_brand_assets(force=False):
             ok_icon = _download_file(BRAND_ICON_URL, BRAND_ICON_PATH) or ok_icon
 
         if ok_icon and (force or not os.path.isfile(BRAND_SYNC_FLAG)):
-            if _install_menu_icon(BRAND_ICON_PATH):
+            if not os.path.isfile(PLUGIN_ICON) and _install_menu_icon(PLUGIN_ICON):
                 try:
                     with open(BRAND_SYNC_FLAG, "w") as flag_f:
                         flag_f.write("ok\n")
@@ -199,6 +199,8 @@ def update_plugin(session):
         "online_web_control.py": "plugin/online_web_control.py",
         "__init__.py": "plugin/__init__.py",
         "VERSION": "VERSION",
+        "assets/o4t_banner.svg": "assets/o4t_banner.svg",
+        "assets/o4t_icon.svg": "assets/o4t_icon.svg",
     }
     temp_dir = None
     backups = {}
@@ -215,6 +217,7 @@ def update_plugin(session):
             if not data:
                 raise Exception("الملف فارغ: " + remote_path)
             target = os.path.join(temp_dir, local_name)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
             with open(target, "wb") as handle:
                 handle.write(data)
 
@@ -240,6 +243,7 @@ def update_plugin(session):
         for name in files:
             source = os.path.join(temp_dir, name)
             destination = os.path.join(PLUGIN_DIR, name)
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
             staged = destination + ".online4tech-new"
             shutil.copyfile(source, staged)
             os.chmod(staged, 0o644)

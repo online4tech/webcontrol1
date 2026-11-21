@@ -217,7 +217,9 @@ def update_plugin(session):
             if not data:
                 raise Exception("الملف فارغ: " + remote_path)
             target = os.path.join(temp_dir, local_name)
-            os.makedirs(os.path.dirname(target), exist_ok=True)
+            parent = os.path.dirname(target)
+            if parent and not os.path.isdir(parent):
+                os.makedirs(parent)
             with open(target, "wb") as handle:
                 handle.write(data)
 
@@ -243,7 +245,9 @@ def update_plugin(session):
         for name in files:
             source = os.path.join(temp_dir, name)
             destination = os.path.join(PLUGIN_DIR, name)
-            os.makedirs(os.path.dirname(destination), exist_ok=True)
+            parent = os.path.dirname(destination)
+            if parent and not os.path.isdir(parent):
+                os.makedirs(parent)
             staged = destination + ".online4tech-new"
             shutil.copyfile(source, staged)
             os.chmod(staged, 0o644)

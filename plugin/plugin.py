@@ -366,7 +366,7 @@ class OnlineWebControlScreen(Screen):
                 return
             w = self["banner"].instance.size().width()
             h = self["banner"].instance.size().height()
-            self.picload.setPara((w, h, 0, 0, False, 1, "#081A31"))
+            self.picload.setPara((w, h, 1, 1, False, 1, "#081A31"))
             self.picload.startDecode(BRAND_BANNER_PATH)
         except Exception as error:
             print("[OnlineWebControl] Banner load error: %s" % error)

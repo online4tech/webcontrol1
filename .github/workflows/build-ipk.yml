@@ -25,6 +25,24 @@ jobs:
       - name: Validate Python syntax
         run: python3 -m py_compile plugin/plugin.py plugin/online_web_control.py plugin/__init__.py
 
+      - name: Verify UI and API contracts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          plugin = Path("plugin/plugin.py").read_text(encoding="utf-8")
+          panel = Path("plugin/online_web_control.py").read_text(encoding="utf-8")
+          required_screen = ("OnlineWebControlScreen", "name=\\\"banner\\\"", "name=\\\"status\\\"", "name=\\\"green\\\"", "name=\\\"red\\\"", "name=\\\"yellow\\\"")
+          missing = [item for item in required_screen if item not in plugin]
+          required_api = ("/api/stats", "/api/catalog", "/api/iptv_detect", "/api/control", "/api/plugin", "/api/iptv_save", "/api/iptv_bouquet", "/api/install", "/api/tool", "/api/save", "/api/exec")
+          missing += [item for item in required_api if item not in panel]
+          if missing:
+              raise SystemExit("Missing UI/API contract(s): " + ", ".join(missing))
+          if "o4t-main-logo.png" not in plugin or "o4t-icon.png" not in plugin:
+              raise SystemExit("Online4Tech brand assets are not referenced")
+          print("UI widgets, API routes and O4T asset references verified")
+          PY
+
       - name: Build IPK package
         shell: bash
         run: |

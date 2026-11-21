@@ -817,6 +817,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
   .pill-dark { background:#102337 !important; border-color:#29465e !important; }
   .brand-tagline, .footer-title { color:#55d7ff !important; }
   @media(max-width:640px) { .brand-banner-img { width:min(330px,94%); max-height:96px; } }
+  /* Online4Tech header: preserve the complete original logo without clipping. */
+  .head { background:#081A31 !important; padding:18px 16px 16px !important; overflow:visible !important; }
+  .brand-banner-wrap { width:100%; min-height:0; margin:0 auto 10px !important; padding:0 8px; overflow:visible !important; }
+  .brand-banner-img { width:min(560px,96%) !important; max-width:100% !important; max-height:none !important; height:auto !important; object-fit:contain !important; object-position:center center !important; }
+  @media(max-width:640px) {
+    .head { padding:14px 8px !important; }
+    .brand-banner-img { width:min(420px,98%) !important; max-height:none !important; }
+  }
 </style>
 </head>
 <body>

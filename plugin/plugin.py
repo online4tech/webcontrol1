@@ -392,6 +392,7 @@ class OnlineWebControlScreen(Screen):
 
     def _load_banner(self):
         try:
+            self.refresh_status()
             self["banner"].hide()
             if not os.path.isfile(BRAND_BANNER_PATH) or os.path.getsize(BRAND_BANNER_PATH) == 0:
                 threading.Thread(target=sync_brand_assets, daemon=True).start()

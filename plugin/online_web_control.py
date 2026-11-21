@@ -65,8 +65,8 @@ SELF_PATH = os.path.abspath(__file__)
 # صور اللوجو: تتحمّل مرة واحدة من GitHub وتتحفظ محلياً على الرسيفر لسرعة الفتح
 BRAND_ASSETS_DIR = os.path.join(os.path.dirname(SELF_PATH), "assets")
 BRAND_ASSETS = {
-    "banner.svg": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.svg",
-    "icon.svg":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.svg",
+    "banner.png": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t-main-logo.png",
+    "icon.png":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t-icon.png",
 }
 # ==========================================================
 
@@ -206,19 +206,19 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <title>online4tech | Web Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
-<link rel="apple-touch-icon" href="/assets/icon.svg">
+<link rel="icon" type="image/png" sizes="128x128" href="/assets/icon.png">
+<link rel="apple-touch-icon" href="/assets/icon.png">
 <style>
   :root {
-    --bg: #090806;
-    --card: #12110e;
-    --line: #272210;
-    --gold: #f2c230;
-    --gold-soft: rgba(242,194,48,.12);
-    --gold-line: rgba(242,194,48,.32);
-    --text: #f4f1e8;
-    --muted: #a39d8a;
-    --field: #0b0b0a;
+    --bg: #071321;
+    --card: #101f30;
+    --line: #24415a;
+    --gold: #55d7ff;
+    --gold-soft: rgba(85,215,255,.10);
+    --gold-line: rgba(85,215,255,.30);
+    --text: #f4f8fc;
+    --muted: #a8bfd0;
+    --field: #091827;
   }
   html { background: #090806; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
@@ -794,6 +794,24 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .catalog-toolbar { flex-wrap:wrap; }
     .catalog-toolbar input { flex-basis:100%; }
   }
+
+  /* Online4Tech official brand palette and supplied logo assets */
+  :root { --bg:#071321; --card:#101f30; --line:#24415a; --gold:#55d7ff; --gold-soft:rgba(85,215,255,.10); --gold-line:rgba(85,215,255,.30); --text:#f4f8fc; --muted:#a8bfd0; --field:#091827; }
+  html, body { background:#071321 !important; color:#f4f8fc; }
+  body { background:radial-gradient(circle at 50% -10%, #153b58 0%, #071321 58%) !important; }
+  .head { background:linear-gradient(135deg,#102b43,#081827) !important; border-color:#2c5b79 !important; }
+  .brand-banner-wrap { margin:0 auto 8px; }
+  .brand-banner-img { width:min(460px,92%); max-height:132px; object-fit:contain; filter:drop-shadow(0 8px 22px rgba(0,189,242,.20)); }
+  .head h1, .card-title, .stat .v, .badge, .power b, .pill b { color:#55d7ff !important; }
+  .card, .stat { background:linear-gradient(145deg,#12263a,#0d1b2a) !important; border-color:#29465e !important; }
+  .card-head { border-color:#29465e !important; }
+  .badge { background:rgba(85,215,255,.09) !important; border-color:rgba(85,215,255,.32) !important; }
+  input, textarea { background:#081725 !important; border-color:#29465e !important; }
+  input:focus, textarea:focus { outline-color:#55d7ff !important; border-color:#55d7ff !important; }
+  .console { background:#050e17 !important; border-color:#29465e !important; }
+  .pill-dark { background:#102337 !important; border-color:#29465e !important; }
+  .brand-tagline, .footer-title { color:#55d7ff !important; }
+  @media(max-width:640px) { .brand-banner-img { width:min(330px,94%); max-height:96px; } }
 </style>
 </head>
 <body>
@@ -801,7 +819,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   <div class="head">
     <div class="brand-banner-wrap">
-      <img class="brand-banner-img" src="/assets/banner.svg" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
+      <img class="brand-banner-img" src="/assets/banner.png" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
     </div>
     <div id="o4t_fallback_logo" style="display:none">
       <div class="logo" role="img" aria-label="Online4Tech">
@@ -1997,11 +2015,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
-        elif clean_path in ("/assets/banner.svg", "/assets/icon.svg"):
+        elif clean_path in ("/assets/banner.png", "/assets/icon.png"):
             data = get_brand_asset(os.path.basename(clean_path))
             if data:
                 self.send_response(200)
-                self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+                self.send_header("Content-Type", "image/png")
                 self.send_header("Cache-Control", "public, max-age=31536000")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()

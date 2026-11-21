@@ -65,8 +65,8 @@ SELF_PATH = os.path.abspath(__file__)
 # صور اللوجو: تتحمّل مرة واحدة من GitHub وتتحفظ محلياً على الرسيفر لسرعة الفتح
 BRAND_ASSETS_DIR = os.path.join(os.path.dirname(SELF_PATH), "assets")
 BRAND_ASSETS = {
-    "banner.png": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.png",
-    "icon.png":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.png",
+    "banner.svg": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.svg",
+    "icon.svg":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.svg",
 }
 # ==========================================================
 
@@ -206,8 +206,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <title>online4tech | Web Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="/assets/icon.png">
-<link rel="apple-touch-icon" href="/assets/icon.png">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
 <style>
   :root {
     --bg: #090806;
@@ -221,7 +221,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     --field: #0b0b0a;
   }
   html { background: #090806; }
-- { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
   body { background: radial-gradient(circle at 50% -8%, #1d1807 0%, var(--bg) 52%); background-attachment: fixed; color: var(--text); min-height: 100vh; padding: 14px 12px 30px; }
   .wrap { width: min(100%, 1580px); margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .head, .stats, .foot { grid-column: 1 / -1; }
@@ -801,7 +801,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   <div class="head">
     <div class="brand-banner-wrap">
-      <img class="brand-banner-img" src="/assets/banner.png" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
+      <img class="brand-banner-img" src="/assets/banner.svg" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
     </div>
     <div id="o4t_fallback_logo" style="display:none">
       <div class="logo" role="img" aria-label="Online4Tech">
@@ -1997,11 +1997,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
-        elif clean_path in ("/assets/banner.png", "/assets/icon.png"):
+        elif clean_path in ("/assets/banner.svg", "/assets/icon.svg"):
             data = get_brand_asset(os.path.basename(clean_path))
             if data:
                 self.send_response(200)
-                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
                 self.send_header("Cache-Control", "public, max-age=31536000")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()

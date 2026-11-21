@@ -32,8 +32,10 @@ jobs:
           import re
           plugin = Path("plugin/plugin.py").read_text(encoding="utf-8")
           panel = Path("plugin/online_web_control.py").read_text(encoding="utf-8")
-          required_screen = ("OnlineWebControlScreen", "name=\\\"banner\\\"", "name=\\\"status\\\"", "name=\\\"green\\\"", "name=\\\"red\\\"", "name=\\\"yellow\\\"")
+          required_screen = ("OnlineWebControlScreen",)
+          required_widgets = ("banner", "status", "green", "red", "yellow")
           missing = [item for item in required_screen if item not in plugin]
+          missing += [name for name in required_widgets if not re.search(r"name=[\"\\\']" + name + r"[\"\\\']", plugin)]
           required_api = ("/api/stats", "/api/catalog", "/api/iptv_detect", "/api/control", "/api/plugin", "/api/iptv_save", "/api/iptv_bouquet", "/api/install", "/api/tool", "/api/save", "/api/exec")
           missing += [item for item in required_api if item not in panel]
           if missing:

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'plugin/**'
+      - 'assets/**'
       - 'VERSION'
       - '.github/workflows/build-ipk.yml'
   workflow_dispatch:

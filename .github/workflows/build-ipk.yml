@@ -8,6 +8,8 @@ on:
       - 'assets/**'
       - 'VERSION'
       - '.github/workflows/build-ipk.yml'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

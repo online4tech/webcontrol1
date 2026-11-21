@@ -75,7 +75,12 @@ def get_brand_asset(filename):
     url = BRAND_ASSETS.get(filename)
     if not url:
         return None
-    local_path = os.path.join(BRAND_ASSETS_DIR, filename)
+    # Use the PNGs bundled with the plugin first, so branding works offline.
+    bundled_name = {
+        "banner.png": "o4t-main-logo.png",
+        "icon.png": "o4t-icon.png",
+    }.get(filename, filename)
+    local_path = os.path.join(BRAND_ASSETS_DIR, bundled_name)
     try:
         if os.path.isfile(local_path) and os.path.getsize(local_path) > 0:
             with open(local_path, "rb") as f:

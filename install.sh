@@ -36,13 +36,19 @@ download_file "$REPO_BASE/plugin/plugin.py" "$TMP_DIR/plugin.py" || { echo "ERRO
 download_file "$REPO_BASE/plugin/online_web_control.py" "$TMP_DIR/online_web_control.py" || { echo "ERROR: online_web_control.py download failed"; exit 1; }
 download_file "$REPO_BASE/plugin/__init__.py" "$TMP_DIR/__init__.py" || { echo "ERROR: __init__.py download failed"; exit 1; }
 download_file "$REPO_BASE/VERSION" "$TMP_DIR/VERSION" || { echo "ERROR: VERSION download failed"; exit 1; }
+mkdir -p "$TMP_DIR/assets"
+download_file "$REPO_BASE/assets/o4t_banner.svg" "$TMP_DIR/assets/o4t_banner.svg" || { echo "ERROR: Online4Tech banner download failed"; exit 1; }
+download_file "$REPO_BASE/assets/o4t_icon.svg" "$TMP_DIR/assets/o4t_icon.svg" || { echo "ERROR: Online4Tech icon download failed"; exit 1; }
 
 echo "[2/2] Installing plugin files..."
 mkdir -p "$PLUGIN_DIR"
 cp "$TMP_DIR/plugin.py" "$PLUGIN_DIR/plugin.py"
 cp "$TMP_DIR/online_web_control.py" "$PLUGIN_DIR/online_web_control.py"
 cp "$TMP_DIR/__init__.py" "$PLUGIN_DIR/__init__.py"
-cp "$TMP_DIR/VERSION" "$PLUGIN_DIR/VERSION"
+cp "$TMP_DIR/VERSION" "$PLUGIN_DIR/VERSION" "$PLUGIN_DIR/assets/o4t_banner.svg" "$PLUGIN_DIR/assets/o4t_icon.svg"
+mkdir -p "$PLUGIN_DIR/assets"
+cp "$TMP_DIR/assets/o4t_banner.svg" "$PLUGIN_DIR/assets/o4t_banner.svg"
+cp "$TMP_DIR/assets/o4t_icon.svg" "$PLUGIN_DIR/assets/o4t_icon.svg"
 chmod 644 "$PLUGIN_DIR/plugin.py" "$PLUGIN_DIR/online_web_control.py" "$PLUGIN_DIR/__init__.py" "$PLUGIN_DIR/VERSION"
 
 echo "Installation complete."

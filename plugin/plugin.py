@@ -94,13 +94,12 @@ def sync_brand_assets(force=False):
         if force or not ok_icon:
             ok_icon = _download_file(BRAND_ICON_URL, BRAND_ICON_PATH) or ok_icon
 
-        if ok_icon and (force or not os.path.isfile(BRAND_SYNC_FLAG)):
-            if not os.path.isfile(PLUGIN_ICON) and _install_menu_icon(PLUGIN_ICON):
-                try:
-                    with open(BRAND_SYNC_FLAG, "w") as flag_f:
-                        flag_f.write("ok\n")
-                except Exception:
-                    pass
+        if ok_banner and ok_icon and (force or not os.path.isfile(BRAND_SYNC_FLAG)):
+            try:
+                with open(BRAND_SYNC_FLAG, "w") as flag_f:
+                    flag_f.write("ok\\n")
+            except Exception:
+                pass
     except Exception as error:
         print("[OnlineWebControl] Brand sync error: %s" % error)
 

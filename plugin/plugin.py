@@ -292,44 +292,62 @@ def update_plugin(session):
 
 
 class OnlineWebControlScreen(Screen):
+    # Full native Enigma2 screen redesign. Existing remote-key actions are preserved.
     skin = """
     <screen name="OnlineWebControlScreen" position="center,center" size="800,600"
-        title="Online4Tech Control Center" flags="wfNoBorder" backgroundColor="#050F20">
+        title="Online4Tech Control Center" flags="wfNoBorder" backgroundColor="#061426">
+        <eLabel position="0,0" size="800,600" backgroundColor="#061426" />
         <eLabel position="0,0" size="800,5" backgroundColor="#00C8F0" />
-        <eLabel position="0,5" size="800,2" backgroundColor="#123B60" />
+        <eLabel position="0,5" size="800,2" backgroundColor="#174D78" />
         <eLabel position="0,593" size="800,7" backgroundColor="#087EBA" />
 
-        <!-- Brand header -->
-        <eLabel position="18,18" size="764,142" backgroundColor="#0A1D34" />
-        <eLabel position="18,18" size="764,3" backgroundColor="#00BDF2" />
-        <eLabel position="18,157" size="764,3" backgroundColor="#164F78" />
-        <widget name="banner" position="105,24" size="590,112" alphatest="blend" />
-        <widget name="brand" position="45,57" size="710,43" font="Regular;31" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0A1D34" />
-        <widget name="tagline" position="45,101" size="710,29" font="Regular;19" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#0A1D34" />
+        <!-- Main brand panel -->
+        <eLabel position="18,17" size="764,142" backgroundColor="#0B2038" />
+        <eLabel position="18,17" size="764,4" backgroundColor="#00C8F0" />
+        <eLabel position="18,155" size="764,4" backgroundColor="#174D78" />
+        <widget name="banner" position="112,24" size="576,104" alphatest="blend" />
+        <widget name="brand" position="45,47" size="710,48" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
+        <widget name="tagline" position="45,96" size="710,32" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
 
-        <!-- Live service card -->
-        <eLabel position="30,181" size="740,139" backgroundColor="#102A45" />
-        <eLabel position="30,181" size="6,139" backgroundColor="#00BDF2" />
-        <eLabel position="52,194" size="696,2" backgroundColor="#1D5278" />
-        <widget name="description" position="54,199" size="692,32" font="Regular;17" halign="center" valign="center" foregroundColor="#BBD4E8" backgroundColor="#102A45" />
-        <widget name="status" position="54,235" size="692,39" font="Regular;25" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#102A45" />
-        <widget name="address" position="54,276" size="692,35" font="Regular;20" halign="center" valign="center" foregroundColor="#63D9FF" backgroundColor="#102A45" />
+        <!-- Plugin introduction -->
+        <eLabel position="28,174" size="744,62" backgroundColor="#102B49" />
+        <eLabel position="28,174" size="5,62" backgroundColor="#16B9EF" />
+        <widget name="description" position="48,180" size="704,25" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#102B49" />
+        <widget name="intro" position="48,205" size="704,24" font="Regular;15" halign="center" valign="center" foregroundColor="#A9C9E2" backgroundColor="#102B49" />
 
-        <!-- Guidance strip -->
-        <eLabel position="30,337" size="740,76" backgroundColor="#0B2037" />
-        <eLabel position="30,337" size="740,3" backgroundColor="#17618D" />
-        <widget name="howto" position="48,348" size="704,34" font="Regular;17" halign="center" valign="center" foregroundColor="#E7F2FC" backgroundColor="#0B2037" />
-        <widget name="hint" position="48,382" size="704,24" font="Regular;14" halign="center" valign="center" foregroundColor="#8FB2CC" backgroundColor="#0B2037" />
+        <!-- Service status -->
+        <eLabel position="28,250" size="744,112" backgroundColor="#0D2239" />
+        <eLabel position="28,250" size="744,3" backgroundColor="#1A527B" />
+        <widget name="status" position="48,259" size="704,35" font="Regular;25" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0D2239" />
+        <eLabel position="54,307" size="330,43" backgroundColor="#123654" />
+        <eLabel position="416,307" size="330,43" backgroundColor="#123654" />
+        <widget name="ip_label" position="64,309" size="310,18" font="Regular;13" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget name="ip_value" position="64,326" size="310,22" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
+        <widget name="port_label" position="426,309" size="310,18" font="Regular;13" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget name="port_value" position="426,326" size="310,22" font="Regular;19" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
 
-        <!-- Remote color-key controls -->
-        <eLabel position="30,438" size="236,4" backgroundColor="#34D399" />
-        <widget name="green" position="30,442" size="236,75" font="Regular;21" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#087B50" />
-        <eLabel position="282,438" size="236,4" backgroundColor="#FB7185" />
-        <widget name="red" position="282,442" size="236,75" font="Regular;21" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#A91F39" />
-        <eLabel position="534,438" size="236,4" backgroundColor="#FACC15" />
-        <widget name="yellow" position="534,442" size="236,75" font="Regular;19" halign="center" valign="center" foregroundColor="#101827" backgroundColor="#EAB308" />
+        <!-- How to connect -->
+        <eLabel position="28,376" size="744,42" backgroundColor="#0A1C30" />
+        <widget name="howto" position="42,380" size="716,32" font="Regular;16" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
 
-        <widget name="footer" position="30,535" size="740,32" font="Regular;14" halign="center" valign="center" foregroundColor="#6F96B4" backgroundColor="#050F20" />
+        <!-- Glossy circular remote buttons -->
+        <eLabel position="119,430" size="126,126" backgroundColor="#075B43" cornerRadius="63" />
+        <eLabel position="125,436" size="114,114" backgroundColor="#10A875" cornerRadius="57" />
+        <eLabel position="137,443" size="90,28" backgroundColor="#37DDA6" cornerRadius="14" />
+        <widget name="green" position="125,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
+
+        <eLabel position="337,430" size="126,126" backgroundColor="#791D39" cornerRadius="63" />
+        <eLabel position="343,436" size="114,114" backgroundColor="#D52C55" cornerRadius="57" />
+        <eLabel position="355,443" size="90,28" backgroundColor="#FF7791" cornerRadius="14" />
+        <widget name="red" position="343,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
+
+        <eLabel position="555,430" size="126,126" backgroundColor="#88600A" cornerRadius="63" />
+        <eLabel position="561,436" size="114,114" backgroundColor="#E8B323" cornerRadius="57" />
+        <eLabel position="573,443" size="90,28" backgroundColor="#FFE27A" cornerRadius="14" />
+        <widget name="yellow" position="561,454" size="114,74" font="Regular;18" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
+
+        <widget name="hint" position="30,562" size="740,20" font="Regular;12" halign="center" valign="center" foregroundColor="#789DBA" backgroundColor="#061426" />
+        <widget name="footer" position="30,581" size="740,14" font="Regular;10" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
     </screen>
     """
 
@@ -338,16 +356,20 @@ class OnlineWebControlScreen(Screen):
         self.session = session
         self["banner"] = Pixmap()
         self["brand"] = Label("Online4Tech Control Center")
-        self["tagline"] = Label("خليك دايمًا أونلاين  •  ONLINE TECHNOLOGY")
-        self["description"] = Label("ONLINE4TECH  •  SMART RECEIVER CONTROL CENTER  •  LOCAL NETWORK")
-        self["howto"] = Label("اضغط الأخضر لتشغيل لوحة التحكم وافتح عنوان IP من الموبايل أو الكمبيوتر")
+        self["tagline"] = Label("خليك دايمًا أونلاين")
+        self["description"] = Label("ONLINE4TECH WEB CONTROL")
+        self["intro"] = Label("لوحة تحكم محلية لإدارة الرسيفر من الموبايل أو الكمبيوتر")
         self["status"] = Label("")
-        self["address"] = Label("")
-        self["hint"] = Label("الأخضر تشغيل الخدمة     •     الأحمر إيقاف الخدمة     •     الأصفر تحديث البلجن")
-        self["green"] = Label("▶  تشغيل اللوحة")
-        self["red"] = Label("■  إيقاف اللوحة")
-        self["yellow"] = Label("↻  تحديث البلجن")
-        self["footer"] = Label("ONLINE4TECH  •  خليك دايمًا أونلاين  •  VERSION %s" % (VERSION or "N/A"))
+        self["ip_label"] = Label("عنوان IP الخاص بالرسيفر")
+        self["ip_value"] = Label("")
+        self["port_label"] = Label("منفذ تشغيل لوحة الويب")
+        self["port_value"] = Label(str(PORT))
+        self["howto"] = Label("افتح العنوان الظاهر بعد تشغيل اللوحة من أي جهاز على نفس شبكة المنزل")
+        self["green"] = Label("▶\nتشغيل")
+        self["red"] = Label("■\nإيقاف")
+        self["yellow"] = Label("↻\nتحديث")
+        self["hint"] = Label("الأخضر: تشغيل الخدمة     •     الأحمر: إيقاف الخدمة     •     الأصفر: تحديث البلجن")
+        self["footer"] = Label("ONLINE4TECH  •  VERSION %s" % (VERSION or "N/A"))
         self["actions"] = ActionMap(
             ["ColorActions", "OkCancelActions"],
             {
@@ -376,7 +398,7 @@ class OnlineWebControlScreen(Screen):
                 return
             w = self["banner"].instance.size().width()
             h = self["banner"].instance.size().height()
-            self.picload.setPara((w, h, 1, 1, False, 1, "#081A31"))
+            self.picload.setPara((w, h, 1, 1, False, 1, "#0B2038"))
             self.picload.startDecode(BRAND_BANNER_PATH)
         except Exception as error:
             print("[OnlineWebControl] Banner load error: %s" % error)
@@ -394,11 +416,25 @@ class OnlineWebControlScreen(Screen):
 
     def refresh_status(self):
         running = is_running()
-        state = "● اللوحة تعمل الآن" if running else "● اللوحة متوقفة"
-        self["status"].setText(state)
-        ip = get_ip()
-        self["address"].setText("عنوان اللوحة:  http://%s:%d" % (ip, PORT))
-        self["hint"].setText("IP: %s    |    PORT: %d    •    الإصدار %s    •    OK تحديث الحالة" % (ip, PORT, VERSION or "غير معروف"))
+        if running:
+            self["status"].setText("●  لوحة التحكم تعمل الآن")
+            try:
+                self["status"].instance.setForegroundColor(parseColor("#35E6A2"))
+            except Exception:
+                pass
+        else:
+            self["status"].setText("●  لوحة التحكم متوقفة")
+            try:
+                self["status"].instance.setForegroundColor(parseColor("#FF6685"))
+            except Exception:
+                pass
+        self["ip_value"].setText(get_ip())
+        self["port_value"].setText(str(PORT))
+        self["howto"].setText(
+            "رابط الدخول:  http://%s:%d" % (get_ip(), PORT)
+            if running else "اضغط زر التشغيل الأخضر لبدء الخدمة وإظهار رابط الدخول"
+        )
+        self["hint"].setText("OK لتحديث الحالة  •  الإصدار %s" % (VERSION or "غير معروف"))
 
     def do_start(self):
         start_server()
@@ -413,7 +449,6 @@ class OnlineWebControlScreen(Screen):
     def do_update(self):
         _show_result(self.session, "جاري الاتصال بمستودع GitHub وسحب آخر تحديثات Online4Tech...", timeout=3)
         update_plugin(self.session)
-
 
 def main(session, **kwargs):
     try:

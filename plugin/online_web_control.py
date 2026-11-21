@@ -1184,13 +1184,45 @@ HTML_PAGE = r"""<!DOCTYPE html>
     font-size:1.12rem !important;
   }
   .head h1:after { margin-inline:auto !important; }
+  /* Compact receiver status cards: four across on desktop, two across on narrow screens. */
   .stats {
     display:grid !important;
-    grid-template-columns:minmax(0,1fr) !important;
-    gap:10px !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:9px !important;
+    width:100% !important;
     margin:0 !important;
+    align-items:stretch !important;
   }
-  .stat { width:100%; min-height:68px !important; }
+  .stat {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    gap:7px !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:76px !important;
+    padding:11px 12px !important;
+    border-radius:13px !important;
+    overflow:hidden !important;
+  }
+  .stat .k {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:5px !important;
+    font-size:.76rem !important;
+    line-height:1.4 !important;
+    white-space:normal !important;
+  }
+  .stat .v {
+    font-size:.9rem !important;
+    line-height:1.45 !important;
+    overflow-wrap:anywhere !important;
+    white-space:normal !important;
+  }
+  @media (min-width:641px) and (max-width:900px) {
+    .stats { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  }
   .card {
     align-self:stretch !important;
     margin:0 !important;
@@ -1206,7 +1238,10 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .wrap { width:100% !important; max-width:520px !important; gap:10px !important; }
     .head { padding:17px 12px !important; }
     .brand-banner-img { width:min(100%,360px) !important; max-height:100px !important; }
-    .stats { grid-template-columns:minmax(0,1fr) !important; gap:8px !important; }
+    .stats { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px !important; }
+    .stat { min-height:70px !important; padding:9px 10px !important; }
+    .stat .k { font-size:.68rem !important; }
+    .stat .v { font-size:.8rem !important; }
     .card { padding:14px !important; }
   }
 

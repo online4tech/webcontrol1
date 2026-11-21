@@ -61,7 +61,49 @@ ENIGMA_DIR = "/etc/enigma2"
 
 CURRENT_CWD = "/home/root" if os.path.exists("/home/root") else "/"
 SELF_PATH = os.path.abspath(__file__)
+
+# صور اللوجو: تتحمّل مرة واحدة من GitHub وتتحفظ محلياً على الرسيفر لسرعة الفتح
+BRAND_ASSETS_DIR = os.path.join(os.path.dirname(SELF_PATH), "assets")
+BRAND_ASSETS = {
+    "banner.png": "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_banner.png",
+    "icon.png":   "https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t_icon.png",
+}
 # ==========================================================
+
+
+def get_brand_asset(filename):
+    url = BRAND_ASSETS.get(filename)
+    if not url:
+        return None
+    local_path = os.path.join(BRAND_ASSETS_DIR, filename)
+    try:
+        if os.path.isfile(local_path) and os.path.getsize(local_path) > 0:
+            with open(local_path, "rb") as f:
+                return f.read()
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Online4Tech-WebControl"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = resp.read(5 * 1024 * 1024)
+        if data:
+            try:
+                os.makedirs(BRAND_ASSETS_DIR, exist_ok=True)
+                tmp_path = local_path + ".tmp"
+                with open(tmp_path, "wb") as f:
+                    f.write(data)
+                os.replace(tmp_path, local_path)
+            except Exception:
+                pass
+            return data
+    except Exception:
+        return None
+    return None
+
+
+def prefetch_brand_assets():
+    for name in BRAND_ASSETS:
+        get_brand_asset(name)
 
 
 def run(cmd, timeout=180, cwd=None):
@@ -164,7 +206,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <title>online4tech | Web Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 46'%3E%3Crect width='46' height='46' rx='11' fill='%23f5b800'/%3E%3Ctext x='23' y='34' text-anchor='middle' font-size='30' font-weight='800' font-family='Arial,sans-serif' fill='%23111'%3E4%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="/assets/icon.png">
+<link rel="apple-touch-icon" href="/assets/icon.png">
 <style>
   :root {
     --bg: #090806;
@@ -178,7 +221,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
     --field: #0b0b0a;
   }
   html { background: #090806; }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
+- { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif; }
   body { background: radial-gradient(circle at 50% -8%, #1d1807 0%, var(--bg) 52%); background-attachment: fixed; color: var(--text); min-height: 100vh; padding: 14px 12px 30px; }
   .wrap { width: min(100%, 1580px); margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
   .head, .stats, .foot { grid-column: 1 / -1; }
@@ -220,6 +263,9 @@ HTML_PAGE = r"""<!DOCTYPE html>
   }
 
   .head { text-align: center; background: #0c0b08; border: 1px solid var(--line); border-radius: 18px; padding: 16px 12px 14px; box-shadow: 0 8px 26px rgba(0,0,0,.45); }
+  .brand-banner-wrap { display: flex; justify-content: center; align-items: center; margin-bottom: 8px; }
+  .brand-banner-img { display: block; width: min(420px, 88%); max-height: 115px; height: auto; object-fit: contain; filter: drop-shadow(0 6px 18px rgba(0,170,255,.22)); }
+  @media (max-width: 640px) { .brand-banner-img { width: min(290px, 92%); max-height: 88px; } }
   .logo { display: flex; align-items: center; justify-content: center; gap: 11px; direction: ltr; margin-bottom: 10px; }
   .logo svg { flex: none; }
   .wm { font-size: 1.9rem; font-weight: 800; letter-spacing: -.5px; color: var(--text); line-height: 1; }
@@ -754,11 +800,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <div class="wrap">
 
   <div class="head">
-    <div class="logo" role="img" aria-label="Online4Tech">
-      <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><defs><linearGradient id="brandGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe58a"/><stop offset="1" stop-color="#c99a2e"/></linearGradient></defs><rect x="1" y="1" width="52" height="52" rx="15" fill="url(#brandGold)"/><path d="M12 28a15 15 0 0 1 25-11" fill="none" stroke="#101820" stroke-width="4" stroke-linecap="round"/><path d="M42 26a15 15 0 0 1-25 11" fill="none" stroke="#101820" stroke-width="4" stroke-linecap="round"/><path d="M20 27h14M27 20v14" stroke="#101820" stroke-width="3.5" stroke-linecap="round"/></svg>
-      <span class="wm">online<b>4</b>tech</span>
+    <div class="brand-banner-wrap">
+      <img class="brand-banner-img" src="/assets/banner.png" alt="Online4Tech — خليك دايما اونلاين" onerror="this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';">
     </div>
-    <div class="brand-tagline">خليك دايما اونلاين</div>
+    <div id="o4t_fallback_logo" style="display:none">
+      <div class="logo" role="img" aria-label="Online4Tech">
+        <span class="wm">online<b>4</b>tech</span>
+      </div>
+      <div class="brand-tagline">خليك دايما اونلاين</div>
+    </div>
     <h1>ONLINE TECHNOLOGY · لوحة التحكم المتكاملة</h1>
   </div>
 
@@ -1939,13 +1989,25 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self._auth_ok():
             return
-        if self.path in ("/", "/index.html"):
+        clean_path = self.path.split("?", 1)[0]
+        if clean_path in ("/", "/index.html"):
             page = (HTML_PAGE.replace("%%PORT%%", str(PORT)).replace("%%SUPPORT%%", SUPPORT_URL)
                     .replace("%%SITE%%", SITE_URL).replace("%%STORE%%", STORE_URL))
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(page.encode("utf-8"))
+        elif clean_path in ("/assets/banner.png", "/assets/icon.png"):
+            data = get_brand_asset(os.path.basename(clean_path))
+            if data:
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Cache-Control", "public, max-age=31536000")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+            else:
+                self.send_error(404)
         elif self.path.startswith("/api/catalog"):
             try:
                 req = urllib.request.Request(CATALOG_URL, headers={"User-Agent": "Online4Tech-ControlCenter"})
@@ -1959,9 +2021,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"catalog": catalog})
             except Exception as error:
                 self._json({"error": "تعذر تحميل المكتبة: %s" % error}, 502)
-        elif self.path == "/api/iptv_detect":
+        elif clean_path == "/api/iptv_detect":
             self._json({"plugins": discover_iptv_plugins()})
-        elif self.path == "/api/stats":
+        elif clean_path == "/api/stats":
             self._json(get_stats())
         else:
             self.send_error(404)
@@ -2018,6 +2080,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    threading.Thread(target=prefetch_brand_assets, daemon=True).start()
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     print("Online Web Control running on http://%s:%d" % (get_ip(), PORT))
     try:

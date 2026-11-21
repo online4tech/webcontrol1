@@ -37,8 +37,8 @@ download_file "$REPO_BASE/plugin/online_web_control.py" "$TMP_DIR/online_web_con
 download_file "$REPO_BASE/plugin/__init__.py" "$TMP_DIR/__init__.py" || { echo "ERROR: __init__.py download failed"; exit 1; }
 download_file "$REPO_BASE/VERSION" "$TMP_DIR/VERSION" || { echo "ERROR: VERSION download failed"; exit 1; }
 mkdir -p "$TMP_DIR/assets"
-download_file "$REPO_BASE/assets/o4t_banner.svg" "$TMP_DIR/assets/o4t_banner.svg" || { echo "ERROR: Online4Tech banner download failed"; exit 1; }
-download_file "$REPO_BASE/assets/o4t_icon.svg" "$TMP_DIR/assets/o4t_icon.svg" || { echo "ERROR: Online4Tech icon download failed"; exit 1; }
+download_file "$REPO_BASE/assets/o4t-main-logo.png" "$TMP_DIR/assets/o4t-main-logo.png" || { echo "ERROR: Online4Tech main logo download failed"; exit 1; }
+download_file "$REPO_BASE/assets/o4t-icon.png" "$TMP_DIR/assets/o4t-icon.png" || { echo "ERROR: Online4Tech plugin icon download failed"; exit 1; }
 
 echo "[2/2] Installing plugin files and Online4Tech branding..."
 mkdir -p "$PLUGIN_DIR"
@@ -47,9 +47,9 @@ cp "$TMP_DIR/online_web_control.py" "$PLUGIN_DIR/online_web_control.py"
 cp "$TMP_DIR/__init__.py" "$PLUGIN_DIR/__init__.py"
 cp "$TMP_DIR/VERSION" "$PLUGIN_DIR/VERSION"
 mkdir -p "$PLUGIN_DIR/assets"
-cp "$TMP_DIR/assets/o4t_banner.svg" "$PLUGIN_DIR/assets/o4t_banner.svg"
-cp "$TMP_DIR/assets/o4t_icon.svg" "$PLUGIN_DIR/assets/o4t_icon.svg"
-chmod 644 "$PLUGIN_DIR/plugin.py" "$PLUGIN_DIR/online_web_control.py" "$PLUGIN_DIR/__init__.py" "$PLUGIN_DIR/VERSION" "$PLUGIN_DIR/assets/o4t_banner.svg" "$PLUGIN_DIR/assets/o4t_icon.svg"
+cp "$TMP_DIR/assets/o4t-main-logo.png" "$PLUGIN_DIR/assets/o4t-main-logo.png"
+cp "$TMP_DIR/assets/o4t-icon.png" "$PLUGIN_DIR/assets/o4t-icon.png"
+chmod 644 "$PLUGIN_DIR/plugin.py" "$PLUGIN_DIR/online_web_control.py" "$PLUGIN_DIR/__init__.py" "$PLUGIN_DIR/VERSION" "$PLUGIN_DIR/assets/o4t-main-logo.png" "$PLUGIN_DIR/assets/o4t-icon.png"
 
 echo "Installation complete."
 echo "Login/password: not required (local network use)."

@@ -23,12 +23,12 @@ PORT = 7070
 PID_FILE = "/tmp/online_web_control.pid"
 
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/"
-BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t_banner.svg"
-BRAND_ICON_URL = GITHUB_RAW_BASE + "assets/o4t_icon.svg"
-BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "banner.svg")
-BRAND_ICON_PATH = os.path.join(ASSETS_DIR, "icon.svg")
+BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t_banner.png"
+BRAND_ICON_URL = GITHUB_RAW_BASE + "assets/o4t_icon.png"
+BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "o4t_banner.png")
+BRAND_ICON_PATH = os.path.join(ASSETS_DIR, "o4t_icon.png")
 PLUGIN_ICON = os.path.join(PLUGIN_DIR, "plugin.png")
-BRAND_SYNC_FLAG = os.path.join(ASSETS_DIR, ".o4t_brand_v1")
+BRAND_SYNC_FLAG = os.path.join(ASSETS_DIR, ".o4t_brand_v2")
 
 try:
     with open(os.path.join(PLUGIN_DIR, "VERSION")) as _f:
@@ -93,6 +93,9 @@ def sync_brand_assets(force=False):
             ok_banner = _download_file(BRAND_BANNER_URL, BRAND_BANNER_PATH) or ok_banner
         if force or not ok_icon:
             ok_icon = _download_file(BRAND_ICON_URL, BRAND_ICON_PATH) or ok_icon
+
+        if ok_icon:
+            _install_menu_icon(BRAND_ICON_PATH)
 
         if ok_banner and ok_icon and (force or not os.path.isfile(BRAND_SYNC_FLAG)):
             try:
@@ -198,8 +201,8 @@ def update_plugin(session):
         "online_web_control.py": "plugin/online_web_control.py",
         "__init__.py": "plugin/__init__.py",
         "VERSION": "VERSION",
-        "assets/o4t_banner.svg": "assets/o4t_banner.svg",
-        "assets/o4t_icon.svg": "assets/o4t_icon.svg",
+        "assets/o4t_banner.png": "assets/o4t_banner.png",
+        "assets/o4t_icon.png": "assets/o4t_icon.png",
     }
     temp_dir = None
     backups = {}
@@ -436,11 +439,15 @@ _PLUGIN_ICON_B64 = "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAGFklEQVR42u2d
 def ensure_plugin_icon():
     """Create fallback icon if missing, and sync the custom O4T icon/banner once from GitHub."""
     try:
-        if not os.path.isfile(PLUGIN_ICON):
+        if os.path.isfile(BRAND_ICON_PATH) and os.path.getsize(BRAND_ICON_PATH) > 0:
+            _install_menu_icon(BRAND_ICON_PATH)
+        elif not os.path.isfile(PLUGIN_ICON):
             with open(PLUGIN_ICON, "wb") as icon_file:
                 icon_file.write(base64.b64decode(_PLUGIN_ICON_B64))
             os.chmod(PLUGIN_ICON, 0o644)
-        if not os.path.isfile(BRAND_SYNC_FLAG) or not os.path.isfile(BRAND_BANNER_PATH):
+        if (not os.path.isfile(BRAND_SYNC_FLAG)
+                or not os.path.isfile(BRAND_BANNER_PATH)
+                or not os.path.isfile(BRAND_ICON_PATH)):
             threading.Thread(target=sync_brand_assets, daemon=True).start()
     except Exception as error:
         print("[OnlineWebControl] Icon creation failed: %s" % error)

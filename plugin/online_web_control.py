@@ -1252,7 +1252,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
 
   <div class="head">
     <div class="brand-banner-wrap">
-      <img class="brand-banner-img" src="/assets/banner.png?v=20261121" alt="Online4Tech — خليك دايما اونلاين" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t-main-logo.png?v=20261121';}else{this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';}">
+      <img class="brand-banner-img" src="%%BRAND_BANNER_SRC%%" alt="Online4Tech — خليك دايما اونلاين" loading="eager" decoding="sync" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='https://raw.githubusercontent.com/online4tech/webcontrol1/main/assets/o4t-main-logo.png?v=20261121';}else{this.style.display='none';document.getElementById('o4t_fallback_logo').style.display='block';}">
     </div>
     <div id="o4t_fallback_logo" style="display:none">
       <div class="logo" role="img" aria-label="Online4Tech">
@@ -2442,8 +2442,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         clean_path = self.path.split("?", 1)[0]
         if clean_path in ("/", "/index.html"):
+            # Embed the bundled logo directly in the HTML. This avoids a second
+            # mobile-browser request to /assets/banner.png and works offline.
+            banner_data = get_brand_asset("banner.png")
+            banner_src = ("data:image/png;base64," + base64.b64encode(banner_data).decode("ascii")
+                          if banner_data else "/assets/banner.png?v=20261121")
             page = (HTML_PAGE.replace("%%PORT%%", str(PORT)).replace("%%SUPPORT%%", SUPPORT_URL)
-                    .replace("%%SITE%%", SITE_URL).replace("%%STORE%%", STORE_URL))
+                    .replace("%%SITE%%", SITE_URL).replace("%%STORE%%", STORE_URL)
+                    .replace("%%BRAND_BANNER_SRC%%", banner_src))
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()

@@ -9,6 +9,9 @@ B=$(mktemp -d)
 D=$B/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl
 mkdir -p "$D" "$B/control" dist
 cp plugin/*.py VERSION "$D/"
+# Include the complete Online4Tech branding assets in the IPK package.
+mkdir -p "$D/assets"
+cp -R assets/. "$D/assets/"
 
 cat > "$B/control/control" <<EOT
 Package: $PKG

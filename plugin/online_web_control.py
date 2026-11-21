@@ -880,6 +880,237 @@ HTML_PAGE = r"""<!DOCTYPE html>
     .btn { min-height: 40px !important; padding: 8px 9px !important; font-size: .86rem !important; }
     .console { min-height: 140px !important; max-height: 240px !important; }
   }
+
+  /* ==========================================================
+     Online4Tech Landing Layout — full-screen responsive refresh
+     Visual-only overrides: preserve markup, IDs, handlers and API.
+     ========================================================== */
+  :root {
+    --o4t-navy: #071426;
+    --o4t-panel: #10243a;
+    --o4t-panel-2: #142d47;
+    --o4t-line: rgba(117, 183, 224, .22);
+    --o4t-cyan: #55d7ff;
+    --o4t-blue: #168bd0;
+    --o4t-white: #f4f9ff;
+    --o4t-muted: #a9bfd2;
+    --gold: var(--o4t-cyan);
+  }
+  html, body { min-height:100%; background:var(--o4t-navy) !important; }
+  body {
+    padding:clamp(12px,1.35vw,24px) !important;
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(20,126,183,.24), transparent 34%),
+      radial-gradient(ellipse at 90% 14%, rgba(18,76,128,.2), transparent 30%),
+      linear-gradient(145deg,#071426 0%,#091a2c 52%,#071321 100%) !important;
+  }
+  .wrap {
+    width:100% !important;
+    max-width:1920px !important;
+    min-height:calc(100vh - 36px);
+    margin:0 auto !important;
+    display:grid !important;
+    grid-template-columns:repeat(12,minmax(0,1fr)) !important;
+    grid-auto-flow:row dense;
+    gap:clamp(12px,1.15vw,20px) !important;
+    align-content:start;
+    align-items:stretch !important;
+  }
+  .head, .stats, .foot { grid-column:1 / -1 !important; }
+  .head {
+    min-height:clamp(170px,18vh,230px);
+    display:grid !important;
+    grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
+    align-items:center;
+    gap:24px;
+    text-align:right !important;
+    padding:clamp(22px,3vw,42px) clamp(22px,3.2vw,52px) !important;
+    border:1px solid rgba(85,215,255,.26) !important;
+    border-radius:26px !important;
+    background:
+      radial-gradient(circle at 14% 50%,rgba(18,151,209,.16),transparent 32%),
+      linear-gradient(112deg,#102b46 0%,#0b1e33 54%,#0a192b 100%) !important;
+    box-shadow:0 18px 48px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.04);
+    position:relative;
+    overflow:hidden !important;
+  }
+  .head:before {
+    content:"";
+    position:absolute;
+    width:340px;height:340px;
+    border:1px solid rgba(85,215,255,.09);
+    border-radius:50%;
+    inset-inline-start:-110px;top:-180px;
+    box-shadow:0 0 0 32px rgba(85,215,255,.025),0 0 0 68px rgba(85,215,255,.018);
+    pointer-events:none;
+  }
+  .brand-banner-wrap {
+    grid-column:1;grid-row:1;
+    width:100%;min-height:0;
+    justify-content:flex-start !important;
+    margin:0 !important;padding:0 !important;
+    position:relative;z-index:1;
+  }
+  .brand-banner-img {
+    width:min(100%,620px) !important;
+    max-width:100% !important;
+    max-height:150px !important;
+    height:auto !important;
+    object-fit:contain !important;
+    object-position:right center !important;
+    filter:drop-shadow(0 10px 26px rgba(0,174,239,.22));
+  }
+  #o4t_fallback_logo { grid-column:1;grid-row:1; }
+  .head h1 {
+    grid-column:2;grid-row:1;
+    align-self:center;
+    margin:0 !important;
+    max-width:620px;
+    color:var(--o4t-white) !important;
+    font-size:clamp(1.2rem,2vw,2rem) !important;
+    font-weight:800 !important;
+    line-height:1.7 !important;
+    text-align:right;
+    position:relative;z-index:1;
+  }
+  .head h1:after {
+    content:"إدارة ومتابعة وتحكم كامل في خدمات الرسيفر من لوحة واحدة";
+    display:block;
+    margin-top:8px;
+    max-width:540px;
+    color:#a9c5da;
+    font-size:clamp(.82rem,1vw,1rem);
+    font-weight:500;
+    line-height:1.8;
+  }
+  .stats {
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:clamp(10px,1vw,16px) !important;
+    margin:0 !important;
+  }
+  .stat {
+    min-height:94px;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:16px 20px !important;
+    border-radius:18px !important;
+    border:1px solid var(--o4t-line) !important;
+    background:linear-gradient(145deg,rgba(20,48,74,.96),rgba(12,31,50,.96)) !important;
+    box-shadow:0 10px 26px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.035);
+  }
+  .stat .k {font-size:.82rem !important;color:#b8cddd !important}
+  .stat .v {font-size:clamp(1rem,1.35vw,1.35rem) !important;color:var(--o4t-cyan) !important}
+  .card {
+    grid-column:span 4;
+    min-width:0;
+    height:100%;
+    padding:clamp(17px,1.55vw,25px) !important;
+    border:1px solid var(--o4t-line) !important;
+    border-radius:21px !important;
+    background:linear-gradient(145deg,rgba(19,43,66,.97),rgba(11,28,46,.98)) !important;
+    box-shadow:0 12px 32px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035) !important;
+    transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+  }
+  .card:hover {
+    border-color:rgba(85,215,255,.42) !important;
+    box-shadow:0 16px 36px rgba(0,0,0,.27),0 0 22px rgba(25,151,207,.055) !important;
+  }
+  .quick-card {grid-column:span 4}
+  .iptv-card {grid-column:span 8}
+  .emu-card,.channels-card,.cccam-card {grid-column:span 4}
+  .terminal-card {grid-column:span 8}
+  .console-card {grid-column:span 4}
+  .card-head {
+    min-height:48px;
+    margin-bottom:16px !important;
+    padding-bottom:12px !important;
+    border-color:rgba(117,183,224,.19) !important;
+  }
+  .card-title {font-size:clamp(1rem,1.15vw,1.18rem) !important;color:#8fe2ff !important}
+  .badge {
+    color:#8fe2ff !important;
+    background:rgba(45,166,220,.1) !important;
+    border-color:rgba(85,215,255,.28) !important;
+    padding:6px 11px !important;
+  }
+  .card .stack {gap:10px !important}
+  .btn {
+    min-height:44px;
+    padding:10px 13px !important;
+    border:1px solid rgba(255,255,255,.055) !important;
+    border-radius:12px !important;
+    font-size:.9rem !important;
+    box-shadow:0 5px 14px rgba(0,0,0,.18) !important;
+  }
+  .btn:hover {filter:brightness(1.12);transform:translateY(-1px)}
+  .field label,.hint {color:#b0c5d6 !important}
+  input,textarea {
+    border:1px solid rgba(117,183,224,.22) !important;
+    border-radius:11px !important;
+    background:#08192a !important;
+    color:#f5faff !important;
+  }
+  input:focus,textarea:focus {outline:2px solid rgba(85,215,255,.5) !important}
+  .console {
+    min-height:190px !important;max-height:340px !important;
+    padding:16px !important;
+    border:1px solid rgba(85,215,255,.18) !important;
+    border-radius:14px !important;
+    background:#06111d !important;
+  }
+  .foot {
+    padding:24px clamp(14px,2vw,28px) 12px;
+    margin:0 !important;
+    border:1px solid rgba(117,183,224,.15);
+    border-radius:20px;
+    background:linear-gradient(120deg,rgba(16,39,61,.8),rgba(9,26,43,.82));
+  }
+  .footer-title {color:#8fe2ff !important}
+  .pill-dark {background:#102a43 !important;border-color:rgba(117,183,224,.2) !important}
+  .power {color:#a9bfd2 !important}
+  @media (min-width:1500px) {
+    .wrap {gap:20px !important}
+    .card {padding:25px 27px !important}
+    .btn {min-height:48px;font-size:.96rem !important}
+    .console {min-height:230px !important}
+  }
+  @media (min-width:641px) and (max-width:1100px) {
+    .wrap {grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+    .head,.stats,.foot {grid-column:1 / -1 !important}
+    .head {grid-template-columns:1fr;min-height:0;gap:12px;text-align:center !important}
+    .brand-banner-wrap {justify-content:center !important}
+    .brand-banner-img {width:min(520px,88%) !important;object-position:center !important}
+    .head h1 {grid-column:1;grid-row:auto;text-align:center;max-width:none}
+    .head h1:after {margin-inline:auto}
+    .stats {grid-template-columns:repeat(4,minmax(0,1fr)) !important}
+    .quick-card,.iptv-card,.emu-card,.channels-card,.cccam-card,.terminal-card,.console-card {grid-column:span 1}
+    .iptv-card,.terminal-card {grid-column:1 / -1}
+  }
+  @media (max-width:640px) {
+    body {padding:9px !important}
+    .wrap {width:100% !important;min-height:0;grid-template-columns:minmax(0,1fr) !important;gap:11px !important}
+    .head,.stats,.foot,.card {grid-column:1 !important}
+    .head {display:flex !important;flex-direction:column;gap:8px;min-height:0;padding:17px 12px !important;text-align:center !important}
+    .brand-banner-wrap {justify-content:center !important}
+    .brand-banner-img {width:min(100%,390px) !important;max-height:100px !important;object-position:center !important}
+    .head h1 {font-size:1rem !important;text-align:center;line-height:1.5 !important}
+    .head h1:after {font-size:.78rem;margin:5px auto 0}
+    .stats {grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important}
+    .stat {min-height:76px;padding:10px 12px !important}
+    .stat .k {font-size:.68rem !important}
+    .stat .v {font-size:.82rem !important;white-space:normal}
+    .card {padding:14px !important;border-radius:16px !important}
+    .card-head {min-height:40px;margin-bottom:12px !important;padding-bottom:9px !important}
+    .card-title {font-size:.92rem !important}
+    .card .stack {gap:8px !important}
+    .btn {min-height:42px;padding:9px 8px !important;font-size:.82rem !important}
+    .console {min-height:130px !important;max-height:230px !important}
+    .foot {padding:18px 10px 10px}
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .card,.btn {transition:none !important}
+  }
+
 </style>
 </head>
 <body>

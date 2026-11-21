@@ -40,7 +40,7 @@ mkdir -p "$TMP_DIR/assets"
 download_file "$REPO_BASE/assets/o4t_banner.svg" "$TMP_DIR/assets/o4t_banner.svg" || { echo "ERROR: Online4Tech banner download failed"; exit 1; }
 download_file "$REPO_BASE/assets/o4t_icon.svg" "$TMP_DIR/assets/o4t_icon.svg" || { echo "ERROR: Online4Tech icon download failed"; exit 1; }
 
-echo "[2/2] Installing plugin files..."
+echo "[2/2] Installing plugin files and Online4Tech branding..."
 mkdir -p "$PLUGIN_DIR"
 cp "$TMP_DIR/plugin.py" "$PLUGIN_DIR/plugin.py"
 cp "$TMP_DIR/online_web_control.py" "$PLUGIN_DIR/online_web_control.py"

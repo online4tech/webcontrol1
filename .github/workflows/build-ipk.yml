@@ -32,6 +32,8 @@ jobs:
           mkdir -p "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl"
           cp plugin/plugin.py plugin/online_web_control.py plugin/__init__.py "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/"
           cp VERSION "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/VERSION"
+          mkdir -p "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/assets"
+          cp -R assets/. "$ROOT/data/usr/lib/enigma2/python/Plugins/Extensions/OnlineWebControl/assets/"
           mkdir -p "$ROOT/control"
           cat > "$ROOT/control/control" <<EOF
           Package: $PKG

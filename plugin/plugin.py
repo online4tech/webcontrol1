@@ -295,6 +295,19 @@ def update_plugin(session):
 # Gate screen: shows OPEN / CLOSED state of the web panel, with IP and port.
 # GREEN = open (start), RED = close (stop), YELLOW = update, OK = refresh.
 # ---------------------------------------------------------------------------
+DEBUG_LOG = "/tmp/owc_debug.log"
+
+
+def _dbg(where):
+    """Write the last Python error to /tmp/owc_debug.log (for troubleshooting)."""
+    try:
+        import traceback
+        with open(DEBUG_LOG, "a") as fh:
+            fh.write("== %s ==\n%s\n" % (where, traceback.format_exc()))
+    except Exception:
+        pass
+
+
 STATE_CLOSED, STATE_OPEN, STATE_OPENING, STATE_CLOSING = 0, 1, 2, 3
 POLL_MS = 500
 AUTO_REFRESH_MS = 2000
@@ -306,42 +319,42 @@ class OnlineWebControlScreen(Screen):
     skin = """
     <screen name="OnlineWebControlScreen" position="center,center" size="800,600"
         title="Online4Tech Web Gate" flags="wfNoBorder" backgroundColor="#061426">
-        <eLabel position="0,0" size="800,600" backgroundColor="#061426" />
-        <eLabel position="0,0" size="800,5" backgroundColor="#00C8F0" />
-        <eLabel position="0,593" size="800,7" backgroundColor="#087EBA" />
+        <eLabel zPosition="0" position="0,0" size="800,600" backgroundColor="#061426" />
+        <eLabel zPosition="1" position="0,0" size="800,5" backgroundColor="#00C8F0" />
+        <eLabel zPosition="1" position="0,593" size="800,7" backgroundColor="#087EBA" />
 
         <!-- Header -->
-        <eLabel position="18,17" size="764,110" backgroundColor="#0B2038" />
-        <widget name="banner" position="112,22" size="576,100" alphatest="blend" />
-        <widget name="brand" position="45,35" size="710,45" font="Regular;32" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
-        <widget name="tagline" position="45,82" size="710,30" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
+        <eLabel zPosition="1" position="18,17" size="764,110" backgroundColor="#0B2038" />
+        <widget zPosition="2" name="banner" position="112,22" size="576,100" alphatest="blend" />
+        <widget zPosition="2" name="brand" position="45,35" size="710,45" font="Regular;32" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
+        <widget zPosition="2" name="tagline" position="45,82" size="710,30" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
 
         <!-- Gate status card (only one of the four is visible at a time) -->
-        <widget name="card_open" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0E8F63" />
-        <widget name="card_closed" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#B5233F" />
-        <widget name="card_wait" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
-        <widget name="card_sub" position="28,208" size="744,28" font="Regular;17" halign="center" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+        <widget zPosition="2" name="card_open" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0E8F63" />
+        <widget zPosition="2" name="card_closed" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#B5233F" />
+        <widget zPosition="2" name="card_wait" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
+        <widget zPosition="2" name="card_sub" position="28,208" size="744,28" font="Regular;17" halign="center" valign="center" foregroundColor="#FFFFFF" transparent="1" />
 
         <!-- IP / Port -->
-        <eLabel position="28,252" size="364,70" backgroundColor="#123654" />
-        <eLabel position="408,252" size="364,70" backgroundColor="#123654" />
-        <widget name="ip_label" position="38,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget name="ip_value" position="38,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
-        <widget name="port_label" position="418,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget name="port_value" position="418,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
+        <eLabel zPosition="1" position="28,252" size="364,70" backgroundColor="#123654" />
+        <eLabel zPosition="1" position="408,252" size="364,70" backgroundColor="#123654" />
+        <widget zPosition="2" name="ip_label" position="38,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget zPosition="2" name="ip_value" position="38,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
+        <widget zPosition="2" name="port_label" position="418,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget zPosition="2" name="port_value" position="418,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
 
         <!-- Full URL -->
-        <eLabel position="28,336" size="744,52" backgroundColor="#0A1C30" />
-        <widget name="url" position="38,340" size="724,44" font="Regular;26" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
+        <eLabel zPosition="1" position="28,336" size="744,52" backgroundColor="#0A1C30" />
+        <widget zPosition="2" name="url" position="38,340" size="724,44" font="Regular;26" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
 
         <!-- Gate buttons: bright when usable, dim when not applicable -->
-        <widget name="green" position="28,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
-        <widget name="green_off" position="28,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#6F9A8C" backgroundColor="#0C3A2E" />
-        <widget name="red" position="408,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
-        <widget name="red_off" position="408,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#A07582" backgroundColor="#40161F" />
+        <widget zPosition="2" name="green" position="28,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
+        <widget zPosition="2" name="green_off" position="28,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#6F9A8C" backgroundColor="#0C3A2E" />
+        <widget zPosition="2" name="red" position="408,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
+        <widget zPosition="2" name="red_off" position="408,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#A07582" backgroundColor="#40161F" />
 
-        <widget name="hint" position="30,512" size="740,28" font="Regular;16" halign="center" valign="center" foregroundColor="#9DBFD8" backgroundColor="#061426" />
-        <widget name="footer" position="30,560" size="740,24" font="Regular;13" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
+        <widget zPosition="2" name="hint" position="30,512" size="740,28" font="Regular;16" halign="center" valign="center" foregroundColor="#9DBFD8" backgroundColor="#061426" />
+        <widget zPosition="2" name="footer" position="30,560" size="740,24" font="Regular;13" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
     </screen>
     """
 
@@ -403,9 +416,12 @@ class OnlineWebControlScreen(Screen):
 
     # ---- lifecycle -------------------------------------------------------
     def _on_layout(self):
-        self._load_banner()
-        self.refresh_status()
-        self.timer.start(AUTO_REFRESH_MS, True)
+        try:
+            self._load_banner()
+            self.refresh_status()
+            self.timer.start(AUTO_REFRESH_MS, True)
+        except Exception:
+            _dbg("on_layout")
 
     def _on_close(self):
         try:
@@ -522,6 +538,7 @@ class OnlineWebControlScreen(Screen):
                 self.refresh_status()
                 self.timer.start(AUTO_REFRESH_MS, True)
         except Exception as error:
+            _dbg("tick")
             print("[OnlineWebControl] Tick error: %s" % error)
             self.timer.start(AUTO_REFRESH_MS, True)
 

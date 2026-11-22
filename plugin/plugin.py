@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Online Web Control - Enigma2 plugin
-# دوره فقط: تشغيل / إيقاف لوحة الويب (بورت 7070). كل التحكم الباقي داخل الصفحة.
+# بوابة لوحة الويب (بورت 7070): أخضر = فتح، أحمر = قفل، مع عرض الحالة والـ IP والـ PORT.
 from __future__ import print_function
 import os
 import base64
@@ -14,7 +14,7 @@ from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
-from enigma import ePicLoad
+from enigma import ePicLoad, eTimer
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(PLUGIN_DIR, "assets")
@@ -291,108 +291,131 @@ def update_plugin(session):
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+# ---------------------------------------------------------------------------
+# Gate screen: shows OPEN / CLOSED state of the web panel, with IP and port.
+# GREEN = open (start), RED = close (stop), YELLOW = update, OK = refresh.
+# ---------------------------------------------------------------------------
+STATE_CLOSED, STATE_OPEN, STATE_OPENING, STATE_CLOSING = 0, 1, 2, 3
+POLL_MS = 500
+AUTO_REFRESH_MS = 2000
+WAIT_OPEN_TICKS = 20    # 20 x 0.5s = 10 seconds to wait for the port to open
+WAIT_CLOSE_TICKS = 10   # 10 x 0.5s = 5 seconds to wait for the port to close
+
+
 class OnlineWebControlScreen(Screen):
-    # Full native Enigma2 screen redesign. Existing remote-key actions are preserved.
     skin = """
     <screen name="OnlineWebControlScreen" position="center,center" size="800,600"
-        title="Online4Tech Control Center" flags="wfNoBorder" backgroundColor="#061426">
+        title="Online4Tech Web Gate" flags="wfNoBorder" backgroundColor="#061426">
         <eLabel position="0,0" size="800,600" backgroundColor="#061426" />
         <eLabel position="0,0" size="800,5" backgroundColor="#00C8F0" />
-        <eLabel position="0,5" size="800,2" backgroundColor="#174D78" />
         <eLabel position="0,593" size="800,7" backgroundColor="#087EBA" />
 
-        <!-- Main brand panel -->
-        <eLabel position="18,17" size="764,142" backgroundColor="#0B2038" />
-        <eLabel position="18,17" size="764,4" backgroundColor="#00C8F0" />
-        <eLabel position="18,155" size="764,4" backgroundColor="#174D78" />
-        <widget name="banner" position="112,24" size="576,104" alphatest="blend" />
-        <widget name="brand" position="45,47" size="710,48" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
-        <widget name="tagline" position="45,96" size="710,32" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
+        <!-- Header -->
+        <eLabel position="18,17" size="764,110" backgroundColor="#0B2038" />
+        <widget name="banner" position="112,22" size="576,100" alphatest="blend" />
+        <widget name="brand" position="45,35" size="710,45" font="Regular;32" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
+        <widget name="tagline" position="45,82" size="710,30" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
 
-        <!-- Plugin introduction -->
-        <eLabel position="28,174" size="744,62" backgroundColor="#102B49" />
-        <eLabel position="28,174" size="5,62" backgroundColor="#16B9EF" />
-        <widget name="description" position="48,180" size="704,25" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#102B49" />
-        <widget name="intro" position="48,205" size="704,24" font="Regular;15" halign="center" valign="center" foregroundColor="#A9C9E2" backgroundColor="#102B49" />
+        <!-- Gate status card (only one of the four is visible at a time) -->
+        <widget name="card_open" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0E8F63" />
+        <widget name="card_closed" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#B5233F" />
+        <widget name="card_wait" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
+        <widget name="card_sub" position="28,208" size="744,28" font="Regular;17" halign="center" valign="center" foregroundColor="#FFFFFF" transparent="1" />
 
-        <!-- Service status -->
-        <eLabel position="28,250" size="744,112" backgroundColor="#0D2239" />
-        <eLabel position="28,250" size="744,3" backgroundColor="#1A527B" />
-        <widget name="status" position="48,259" size="704,35" font="Regular;25" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0D2239" />
-        <eLabel position="54,307" size="330,43" backgroundColor="#123654" />
-        <eLabel position="416,307" size="330,43" backgroundColor="#123654" />
-        <widget name="ip_label" position="64,309" size="310,18" font="Regular;13" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget name="ip_value" position="64,326" size="310,22" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
-        <widget name="port_label" position="426,309" size="310,18" font="Regular;13" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget name="port_value" position="426,326" size="310,22" font="Regular;19" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
+        <!-- IP / Port -->
+        <eLabel position="28,252" size="364,70" backgroundColor="#123654" />
+        <eLabel position="408,252" size="364,70" backgroundColor="#123654" />
+        <widget name="ip_label" position="38,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget name="ip_value" position="38,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
+        <widget name="port_label" position="418,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
+        <widget name="port_value" position="418,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
 
-        <!-- How to connect -->
-        <eLabel position="28,376" size="744,42" backgroundColor="#0A1C30" />
-        <widget name="howto" position="42,380" size="716,32" font="Regular;16" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
+        <!-- Full URL -->
+        <eLabel position="28,336" size="744,52" backgroundColor="#0A1C30" />
+        <widget name="url" position="38,340" size="724,44" font="Regular;26" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
 
-        <!-- Glossy circular remote buttons -->
-        <eLabel position="119,430" size="126,126" backgroundColor="#075B43" cornerRadius="63" />
-        <eLabel position="125,436" size="114,114" backgroundColor="#10A875" cornerRadius="57" />
-        <eLabel position="137,443" size="90,28" backgroundColor="#37DDA6" cornerRadius="14" />
-        <widget name="green" position="125,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
+        <!-- Gate buttons: bright when usable, dim when not applicable -->
+        <widget name="green" position="28,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
+        <widget name="green_off" position="28,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#6F9A8C" backgroundColor="#0C3A2E" />
+        <widget name="red" position="408,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
+        <widget name="red_off" position="408,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#A07582" backgroundColor="#40161F" />
 
-        <eLabel position="337,430" size="126,126" backgroundColor="#791D39" cornerRadius="63" />
-        <eLabel position="343,436" size="114,114" backgroundColor="#D52C55" cornerRadius="57" />
-        <eLabel position="355,443" size="90,28" backgroundColor="#FF7791" cornerRadius="14" />
-        <widget name="red" position="343,454" size="114,74" font="Regular;19" halign="center" valign="center" foregroundColor="#FFFFFF" />
-
-        <eLabel position="555,430" size="126,126" backgroundColor="#88600A" cornerRadius="63" />
-        <eLabel position="561,436" size="114,114" backgroundColor="#E8B323" cornerRadius="57" />
-        <eLabel position="573,443" size="90,28" backgroundColor="#FFE27A" cornerRadius="14" />
-        <widget name="yellow" position="561,454" size="114,74" font="Regular;18" halign="center" valign="center" foregroundColor="#152238" />
-
-        <widget name="hint" position="30,562" size="740,20" font="Regular;12" halign="center" valign="center" foregroundColor="#789DBA" backgroundColor="#061426" />
-        <widget name="footer" position="30,583" size="740,14" font="Regular;10" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
+        <widget name="hint" position="30,512" size="740,28" font="Regular;16" halign="center" valign="center" foregroundColor="#9DBFD8" backgroundColor="#061426" />
+        <widget name="footer" position="30,560" size="740,24" font="Regular;13" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
     </screen>
     """
 
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
+        self.state = STATE_CLOSED
+        self.ticks = 0
+        self.target_open = None
+
         self["banner"] = Pixmap()
-        self["brand"] = Label("Online4Tech Control Center")
+        self["brand"] = Label("Online4Tech Web Gate")
         self["tagline"] = Label("خليك دايمًا أونلاين")
-        self["description"] = Label("ONLINE4TECH WEB CONTROL")
-        self["intro"] = Label("لوحة تحكم محلية لإدارة الرسيفر من الموبايل أو الكمبيوتر")
-        self["status"] = Label("")
-        self["ip_label"] = Label("عنوان IP الخاص بالرسيفر")
+        self["card_open"] = Label("●  البوابة مفتوحة")
+        self["card_closed"] = Label("●  البوابة مقفولة")
+        self["card_wait"] = Label("")
+        self["card_sub"] = Label("")
+        self["ip_label"] = Label("IP الرسيفر")
         self["ip_value"] = Label("")
-        self["port_label"] = Label("منفذ تشغيل لوحة الويب")
+        self["port_label"] = Label("PORT")
         self["port_value"] = Label(str(PORT))
-        self["howto"] = Label("افتح العنوان الظاهر بعد تشغيل اللوحة من أي جهاز على نفس شبكة المنزل")
-        self["green"] = Label("▶\nتشغيل")
-        self["red"] = Label("■\nإيقاف")
-        self["yellow"] = Label("↻\nتحديث")
-        self["hint"] = Label("الأخضر: تشغيل الخدمة     •     الأحمر: إيقاف الخدمة     •     الأصفر: تحديث البلجن")
+        self["url"] = Label("")
+        self["green"] = Label("▶  فتح")
+        self["green_off"] = Label("مفتوحة بالفعل")
+        self["red"] = Label("■  قفل")
+        self["red_off"] = Label("مقفولة بالفعل")
+        self["hint"] = Label("")
         self["footer"] = Label("ONLINE4TECH  •  VERSION %s" % (VERSION or "N/A"))
         self["actions"] = ActionMap(
             ["ColorActions", "OkCancelActions"],
             {
-                "green": self.do_start,
-                "red": self.do_stop,
+                "green": self.do_open,
+                "red": self.do_close,
                 "yellow": self.do_update,
                 "ok": self.refresh_status,
                 "cancel": self.close,
             },
             -1
         )
+
+        # Banner loader
         self.picload = ePicLoad()
         self.picload_conn = None
         try:
             self.picload_conn = self.picload.PictureData.connect(self._on_banner_decoded)
         except AttributeError:
             self.picload.PictureData.get().append(self._on_banner_decoded)
-        self.onLayoutFinish.append(self._load_banner)
-        self.refresh_status()
 
+        # One timer: polls while opening/closing, and auto-refreshes while idle
+        self.timer = eTimer()
+        self.timer_conn = None
+        try:
+            self.timer_conn = self.timer.timeout.connect(self._on_tick)
+        except AttributeError:
+            self.timer.callback.append(self._on_tick)
+
+        self.onLayoutFinish.append(self._on_layout)
+        self.onClose.append(self._on_close)
+
+    # ---- lifecycle -------------------------------------------------------
+    def _on_layout(self):
+        self._load_banner()
+        self.refresh_status()
+        self.timer.start(AUTO_REFRESH_MS, True)
+
+    def _on_close(self):
+        try:
+            self.timer.stop()
+        except Exception:
+            pass
+
+    # ---- banner ----------------------------------------------------------
     def _load_banner(self):
         try:
-            self.refresh_status()
             self["banner"].hide()
             if not os.path.isfile(BRAND_BANNER_PATH) or os.path.getsize(BRAND_BANNER_PATH) == 0:
                 threading.Thread(target=sync_brand_assets, daemon=True).start()
@@ -415,41 +438,116 @@ class OnlineWebControlScreen(Screen):
         except Exception as error:
             print("[OnlineWebControl] Banner render error: %s" % error)
 
-    def refresh_status(self):
-        running = is_running()
-        if running:
-            self["status"].setText("●  لوحة التحكم تعمل الآن")
-            try:
-                self["status"].instance.setForegroundColor(gRGB(0x35E6A2))
-            except Exception:
-                pass
-        else:
-            self["status"].setText("●  لوحة التحكم متوقفة")
-            try:
-                self["status"].instance.setForegroundColor(gRGB(0xFF6685))
-            except Exception:
-                pass
-        self["ip_value"].setText(get_ip())
+    # ---- state handling --------------------------------------------------
+    def _set_state(self, state):
+        self.state = state
+        ip = get_ip()
+        url = "http://%s:%d" % (ip, PORT)
+        self["ip_value"].setText(ip)
         self["port_value"].setText(str(PORT))
-        self["howto"].setText(
-            "رابط الدخول:  http://%s:%d" % (get_ip(), PORT)
-            if running else "اضغط زر التشغيل الأخضر لبدء الخدمة وإظهار رابط الدخول"
-        )
-        self["hint"].setText("OK لتحديث الحالة  •  الإصدار %s" % (VERSION or "غير معروف"))
 
-    def do_start(self):
+        for name in ("card_open", "card_closed", "card_wait"):
+            self[name].hide()
+        for name in ("green", "green_off", "red", "red_off"):
+            self[name].hide()
+
+        if state == STATE_OPEN:
+            self["card_open"].show()
+            self["card_sub"].setText("اللوحة شغالة وجاهزة للدخول من أي جهاز على نفس الشبكة")
+            self["url"].setText(url)
+            self["green_off"].show()
+            self["red"].show()
+            self["hint"].setText("الأحمر: قفل البوابة   •   الأصفر: تحديث   •   OK: فحص الحالة")
+        elif state == STATE_CLOSED:
+            self["card_closed"].show()
+            self["card_sub"].setText("اللوحة متوقفة ومفيش دخول عليها")
+            self["url"].setText("اللوحة مقفولة  —  اضغط الأخضر للفتح")
+            self["green"].show()
+            self["red_off"].show()
+            self["hint"].setText("الأخضر: فتح البوابة   •   الأصفر: تحديث   •   OK: فحص الحالة")
+        elif state == STATE_OPENING:
+            self["card_wait"].setText("◌  جاري الفتح ...")
+            self["card_wait"].show()
+            self["card_sub"].setText("")
+            self["url"].setText(url)
+            self["green_off"].setText("جاري الفتح ...")
+            self["green_off"].show()
+            self["red_off"].show()
+            self["hint"].setText("استنى لحظات لحد ما البورت يفتح")
+        elif state == STATE_CLOSING:
+            self["card_wait"].setText("◌  جاري القفل ...")
+            self["card_wait"].show()
+            self["card_sub"].setText("")
+            self["url"].setText(url)
+            self["green_off"].setText("مفتوحة بالفعل")
+            self["green_off"].show()
+            self["red_off"].setText("جاري القفل ...")
+            self["red_off"].show()
+            self["hint"].setText("استنى لحظات لحد ما البورت يتقفل")
+        if state != STATE_CLOSING:
+            self["red_off"].setText("مقفولة بالفعل")
+        if state != STATE_OPENING:
+            self["green_off"].setText("مفتوحة بالفعل")
+
+    def refresh_status(self):
+        if self.state in (STATE_OPENING, STATE_CLOSING):
+            return
+        self._set_state(STATE_OPEN if is_running() else STATE_CLOSED)
+
+    def _on_tick(self):
+        try:
+            if self.state == STATE_OPENING:
+                self.ticks += 1
+                if is_running():
+                    self._set_state(STATE_OPEN)
+                    self.timer.start(AUTO_REFRESH_MS, True)
+                elif self.ticks >= WAIT_OPEN_TICKS:
+                    self._set_state(STATE_CLOSED)
+                    _show_result(self.session, "تعذر فتح اللوحة. جرّب تاني أو تأكد إن Python شغال على الرسيفر.", timeout=8)
+                    self.timer.start(AUTO_REFRESH_MS, True)
+                else:
+                    self.timer.start(POLL_MS, True)
+            elif self.state == STATE_CLOSING:
+                self.ticks += 1
+                if not is_running():
+                    self._set_state(STATE_CLOSED)
+                    self.timer.start(AUTO_REFRESH_MS, True)
+                elif self.ticks >= WAIT_CLOSE_TICKS:
+                    os.system("pkill -9 -f online_web_control.py >/dev/null 2>&1")
+                    self.ticks = 0
+                    self.timer.start(POLL_MS, True)
+                else:
+                    self.timer.start(POLL_MS, True)
+            else:
+                self.refresh_status()
+                self.timer.start(AUTO_REFRESH_MS, True)
+        except Exception as error:
+            print("[OnlineWebControl] Tick error: %s" % error)
+            self.timer.start(AUTO_REFRESH_MS, True)
+
+    # ---- actions ---------------------------------------------------------
+    def do_open(self):
+        if self.state != STATE_CLOSED:
+            return
         start_server()
-        self.refresh_status()
-        _show_result(self.session, "تم إرسال أمر تشغيل لوحة Online4Tech.")
+        self.ticks = 0
+        self._set_state(STATE_OPENING)
+        self.timer.start(POLL_MS, True)
 
-    def do_stop(self):
+    def do_close(self):
+        if self.state != STATE_OPEN:
+            return
         stop_server()
-        self.refresh_status()
-        _show_result(self.session, "تم إيقاف لوحة Online4Tech.")
+        self.ticks = 0
+        self._set_state(STATE_CLOSING)
+        self.timer.start(POLL_MS, True)
 
     def do_update(self):
+        if self.state in (STATE_OPENING, STATE_CLOSING):
+            return
         _show_result(self.session, "جاري الاتصال بمستودع GitHub وسحب آخر تحديثات Online4Tech...", timeout=3)
         update_plugin(self.session)
+
 
 def main(session, **kwargs):
     try:
@@ -480,7 +578,7 @@ def ensure_plugin_icon():
 def Plugins(**kwargs):
     ensure_plugin_icon()
     return [PluginDescriptor(name="Online4Tech Control Center",
-                             description="إدارة لوحة Online4Tech: تشغيل وإيقاف ومتابعة IP والبورت %d" % PORT,
+                             description="بوابة لوحة Online4Tech: فتح وقفل ومتابعة IP والبورت %d" % PORT,
                              where=PluginDescriptor.WHERE_PLUGINMENU,
                              icon=PLUGIN_ICON,
                              fnc=main)]

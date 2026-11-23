@@ -3,11 +3,11 @@
 # بوابة لوحة الويب (بورت 7070): أخضر = فتح، أحمر = قفل، مع عرض الحالة والـ IP والـ PORT.
 from __future__ import print_function
 import os
-import base64
 import signal
 import socket
 import subprocess
 import threading
+import time
 
 from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
@@ -309,22 +309,27 @@ def _dbg(where):
 # semi-transparent labels: soft top highlight, bright top edge, bottom shade and
 # a thin light border. Layers: bg=0, panels=1, colored widgets=2, glass=3, text=4.
 # ---------------------------------------------------------------------------
+def _c(opacity, rgb):
+    """Color with opacity 0-255. Enigma2 alpha byte is inverted: 00 = solid, FF = transparent."""
+    return "#%02X%s" % (255 - opacity, rgb)
+
+
 def _lbl(x, y, w, h, color, z):
     return '<eLabel position="%d,%d" size="%d,%d" backgroundColor="%s" zPosition="%d" />\n' % (x, y, w, h, color, z)
 
 
 def _glass(x, y, w, h):
-    out = _lbl(x + 1, y + 1, w - 2, min(h // 2, 52), "#22FFFFFF", 3)   # soft top highlight
-    out += _lbl(x + 2, y + 1, w - 4, 2, "#88FFFFFF", 3)            # bright top edge
-    out += _lbl(x + 1, y + h - 4, w - 2, 3, "#55000000", 3)        # bottom shade
-    out += _lbl(x, y, w, 1, "#55FFFFFF", 3)                        # border
-    out += _lbl(x, y + h - 1, w, 1, "#33FFFFFF", 3)
-    out += _lbl(x, y, 1, h, "#44FFFFFF", 3)
-    out += _lbl(x + w - 1, y, 1, h, "#44FFFFFF", 3)
+    out = _lbl(x + 1, y + 1, w - 2, min(h // 2, 52), _c(34, "FFFFFF"), 3)   # soft top highlight
+    out += _lbl(x + 2, y + 1, w - 4, 2, _c(136, "FFFFFF"), 3)            # bright top edge
+    out += _lbl(x + 1, y + h - 4, w - 2, 3, _c(85, "000000"), 3)        # bottom shade
+    out += _lbl(x, y, w, 1, _c(85, "FFFFFF"), 3)                        # border
+    out += _lbl(x, y + h - 1, w, 1, _c(51, "FFFFFF"), 3)
+    out += _lbl(x, y, 1, h, _c(68, "FFFFFF"), 3)
+    out += _lbl(x + w - 1, y, 1, h, _c(68, "FFFFFF"), 3)
     return out
 
 
-def _panel(x, y, w, h, color="#CC10263F"):
+def _panel(x, y, w, h, color=_c(204, "10263F")):
     return _lbl(x, y, w, h, color, 1) + _glass(x, y, w, h)
 
 
@@ -339,12 +344,13 @@ def _btn(name, x, y, w, h, font, fg, bg):
             'foregroundColor="%s" backgroundColor="%s" zPosition="2" />\n') % (name, x, y, w, h, font, fg, bg)
 
 
-LOGO_OK = os.path.isfile(BRAND_BANNER_PATH) and os.path.getsize(BRAND_BANNER_PATH) > 0
+def _logo_ok():
+    return os.path.isfile(BRAND_BANNER_PATH) and os.path.getsize(BRAND_BANNER_PATH) > 0
 
 
 def _logo_block():
     """Official logo (330x108) centered in the 764px header, or a text fallback."""
-    if LOGO_OK:
+    if _logo_ok():
         return ('<ePixmap position="235,25" size="330,108" pixmap="%s" alphatest="blend" zPosition="4" />\n'
                 % BRAND_BANNER_PATH)
     return (_txt("brand", 45, 40, 710, 50, 34, "#FFFFFF") +
@@ -355,7 +361,7 @@ def _frame(title):
     s = '<screen name="%s" position="center,center" size="800,600" title="Online4Tech Web Gate" flags="wfNoBorder" backgroundColor="#050F1E">\n' % title
     s += _lbl(0, 0, 800, 600, "#050F1E", 0)
     for i, a in enumerate(("40", "34", "28", "1E", "14", "0A")):      # soft top glow (stepped fade)
-        s += _lbl(0, 5 + i * 50, 800, 50, "#%s1B5A94" % a, 0)
+        s += _lbl(0, 5 + i * 50, 800, 50, _c(int(a, 16), "1B5A94"), 0)
     s += _lbl(0, 0, 400, 5, "#00C8F0", 1) + _lbl(400, 0, 400, 5, "#1E88E5", 1)
     s += _lbl(0, 593, 400, 7, "#1E88E5", 1) + _lbl(400, 593, 400, 7, "#00C8F0", 1)
     s += _panel(18, 14, 764, 134)                                  # header
@@ -380,7 +386,7 @@ def _main_skin():
     s += _txt("port_label", 418, 282, 344, 20, 14, "#83B6D8")
     s += _txt("port_value", 418, 302, 344, 42, 30, "#55D7FF")
     # URL
-    s += _panel(28, 358, 744, 50, "#CC0A1C30")
+    s += _panel(28, 358, 744, 50, _c(204, "0A1C30"))
     s += _txt("url", 38, 362, 724, 42, 26, "#D7EAF8")
     # gate buttons
     s += _btn("green", 28, 422, 364, 80, 28, "#FFFFFF", "#10A875")
@@ -388,14 +394,18 @@ def _main_skin():
     s += _btn("red", 408, 422, 364, 80, 28, "#FFFFFF", "#D52C55")
     s += _btn("red_off", 408, 422, 364, 80, 24, "#A07582", "#40161F")
     s += _glass(28, 422, 364, 80) + _glass(408, 422, 364, 80)
-    s += _txt("hint", 30, 512, 740, 28, 16, "#9DBFD8")
-    s += _txt("footer", 30, 562, 740, 24, 13, "#4E7899")
+    chips = (("chip_green", 34, "#10A875", "#FFFFFF"), ("chip_red", 220, "#D52C55", "#FFFFFF"),
+             ("chip_yellow", 406, "#D9A914", "#1A1400"), ("chip_blue", 592, "#2D7DD2", "#FFFFFF"))
+    for name, cx, bg, fg in chips:
+        s += _btn(name, cx, 510, 174, 32, 17, fg, bg) + _glass(cx, 510, 174, 32)
+    s += _txt("hint", 30, 546, 740, 26, 16, "#9DBFD8")
+    s += _txt("footer", 30, 574, 740, 18, 13, "#4E7899")
     return s + "</screen>"
 
 
 def _help_skin():
     s = _frame("OnlineWebControlHelp")
-    s += _panel(18, 156, 764, 360, "#CC0A1C30")
+    s += _panel(18, 156, 764, 360, _c(204, "0A1C30"))
     s += _txt("h1", 38, 164, 724, 34, 24, "#42D7FF", halign="right")
     s += _txt("b1", 38, 200, 724, 100, 20, "#FFFFFF", halign="right", valign="top")
     s += _txt("h2", 38, 306, 724, 34, 24, "#42D7FF", halign="right")
@@ -404,6 +414,75 @@ def _help_skin():
     s += _txt("hint", 30, 528, 740, 28, 17, "#9DBFD8")
     s += _txt("footer", 30, 562, 740, 24, 13, "#4E7899")
     return s + "</screen>"
+
+
+def _ver_tuple(text):
+    try:
+        return tuple(int(x) for x in str(text).strip().split("."))
+    except Exception:
+        return (0,)
+
+
+def get_remote_version():
+    """Latest released version number from GitHub (None if offline)."""
+    try:
+        import urllib.request
+        req = urllib.request.Request(GITHUB_RAW_BASE + "VERSION", headers={"User-Agent": "Online4Tech-Enigma2-Plugin"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.read().decode("utf-8").strip() or None
+    except Exception:
+        return None
+
+
+WEB_STAMP = os.path.join(PLUGIN_DIR, ".web_update_ts")
+WEB_OFF_FLAG = os.path.join(PLUGIN_DIR, ".no_auto_web_update")
+WEB_INTERVAL = 6 * 3600
+
+
+def auto_update_web(force=False):
+    """Silently refresh the web panel (online_web_control.py) from GitHub, no plugin update needed.
+    Checked at most every 6 hours; create the file .no_auto_web_update in the plugin folder to disable."""
+    try:
+        if os.path.exists(WEB_OFF_FLAG):
+            return False
+        if not force:
+            try:
+                with open(WEB_STAMP) as fh:
+                    if time.time() - float(fh.read().strip()) < WEB_INTERVAL:
+                        return False
+            except Exception:
+                pass
+        import urllib.request
+        req = urllib.request.Request(GITHUB_RAW_BASE + "plugin/online_web_control.py",
+                                     headers={"User-Agent": "Online4Tech-Enigma2-Plugin"})
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            data = resp.read()
+        with open(WEB_STAMP, "w") as fh:
+            fh.write(str(time.time()))
+        if not data or b"ThreadingHTTPServer" not in data:
+            return False
+        with open(SERVER, "rb") as fh:
+            current = fh.read()
+        if data == current:
+            return False
+        compile(data.decode("utf-8"), "online_web_control.py", "exec")   # reject broken files
+        tmp = SERVER + ".new"
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+        try:
+            with open(SERVER + ".bak", "wb") as fh:
+                fh.write(current)
+        except Exception:
+            pass
+        os.replace(tmp, SERVER)
+        if is_running():
+            stop_server()
+            time.sleep(1.5)
+            start_server()
+        return True
+    except Exception as error:
+        print("[OnlineWebControl] Web auto-update skipped: %s" % error)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -423,16 +502,15 @@ HELP_H2 = "طريقة التشغيل"
 HELP_B2 = ("أولًا:  اضغط الأخضر لفتح البوابة وانتظر لحد ما الكارت يبقى أخضر.\n"
            "ثانيًا:  من الموبايل أو الكمبيوتر على نفس الشبكة افتح الرابط الظاهر.\n"
            "ثالثًا:  لما تخلص اضغط الأحمر لقفل البوابة.")
-HELP_NOTE = ("الأصفر: تحديث البلجن من GitHub   •   OK: فحص الحالة   •   EXIT: خروج\n"
-             "مهم: الموبايل لازم يبقى على نفس شبكة الواي فاي بتاعة الرسيفر.")
+HELP_NOTE = ("الأصفر: تحديث البلجن   •   OK: فحص الحالة   •   EXIT: خروج\n"
+             "لوحة الويب بتتحدّث لوحدها من GitHub، والموبايل لازم يبقى على نفس الواي فاي.")
 
 
 class OnlineWebControlHelp(Screen):
-    skin = _help_skin()
-
     def __init__(self, session):
+        self.skin = _help_skin()
         Screen.__init__(self, session)
-        if not LOGO_OK:
+        if not _logo_ok():
             self["brand"] = Label("Online4Tech Web Gate")
             self["tagline"] = Label("خليك دايمًا أونلاين")
         self["h1"] = Label(HELP_H1)
@@ -451,15 +529,14 @@ class OnlineWebControlHelp(Screen):
 
 
 class OnlineWebControlScreen(Screen):
-    skin = _main_skin()
-
     def __init__(self, session):
+        self.skin = _main_skin()
         Screen.__init__(self, session)
         self.session = session
         self.state = STATE_CLOSED
         self.ticks = 0
 
-        if not LOGO_OK:
+        if not _logo_ok():
             self["brand"] = Label("Online4Tech Web Gate")
             self["tagline"] = Label("خليك دايمًا أونلاين")
         self["role"] = Label("بوابة التحكم في لوحة الويب  •  افتح أو اقفل الدخول عليها بضغطة زرار")
@@ -477,7 +554,12 @@ class OnlineWebControlScreen(Screen):
         self["green_off"] = Label("مفتوحة بالفعل")
         self["red"] = Label("■  قفل")
         self["red_off"] = Label("مقفولة بالفعل")
+        self["chip_green"] = Label("الأخضر: فتح")
+        self["chip_red"] = Label("الأحمر: قفل")
+        self["chip_yellow"] = Label("الأصفر: تحديث")
+        self["chip_blue"] = Label("الأزرق: شرح")
         self["hint"] = Label("")
+        self.remote_version = None
         self["footer"] = Label("ONLINE4TECH  •  VERSION %s" % (VERSION or "N/A"))
         self["actions"] = ActionMap(
             ["ColorActions", "OkCancelActions"],
@@ -504,8 +586,20 @@ class OnlineWebControlScreen(Screen):
         self.onClose.append(self._on_close)
 
     # ---- lifecycle -------------------------------------------------------
+    def _idle_hint(self):
+        if self.remote_version and _ver_tuple(self.remote_version) > _ver_tuple(VERSION):
+            return "● يوجد إصدار جديد %s — اضغط الأصفر لتحديث البلجن" % self.remote_version
+        return "الأصفر: تحديث البلجن من GitHub بضغطة واحدة"
+
+    def _check_updates(self):
+        self.remote_version = get_remote_version()
+        auto_update_web()
+
     def _on_layout(self):
         try:
+            if not _logo_ok():
+                threading.Thread(target=sync_brand_assets, daemon=True).start()
+            threading.Thread(target=self._check_updates, daemon=True).start()
             self.refresh_status()
             self.timer.start(AUTO_REFRESH_MS, True)
         except Exception:
@@ -537,7 +631,7 @@ class OnlineWebControlScreen(Screen):
             self["green_off"].setText("مفتوحة بالفعل")
             self["green_off"].show()
             self["red"].show()
-            self["hint"].setText("الأحمر: قفل البوابة   •   الأصفر: تحديث   •   الأزرق: شرح البلجن")
+            self["hint"].setText(self._idle_hint())
         elif state == STATE_CLOSED:
             self["card_closed"].show()
             self["card_title"].setText("●  البوابة مقفولة")
@@ -546,7 +640,7 @@ class OnlineWebControlScreen(Screen):
             self["red_off"].setText("مقفولة بالفعل")
             self["green"].show()
             self["red_off"].show()
-            self["hint"].setText("الأخضر: فتح البوابة   •   الأصفر: تحديث   •   الأزرق: شرح البلجن")
+            self["hint"].setText(self._idle_hint())
         elif state == STATE_OPENING:
             self["card_wait"].show()
             self["card_title"].setText("◌  جاري الفتح ...")
@@ -602,6 +696,9 @@ class OnlineWebControlScreen(Screen):
                     self.timer.start(POLL_MS, True)
             else:
                 self.refresh_status()
+                if self.remote_version and self.state in (STATE_OPEN, STATE_CLOSED):
+                    self["hint"].setText(self._idle_hint())
+                    self["chip_yellow"].setText("تحديث متاح ●" if _ver_tuple(self.remote_version) > _ver_tuple(VERSION) else "الأصفر: تحديث")
                 self.timer.start(AUTO_REFRESH_MS, True)
         except Exception as error:
             _dbg("tick")
@@ -646,7 +743,6 @@ def main(session, **kwargs):
         _show_result(session, "تعذر فتح واجهة التحكم:\n%s" % error)
 
 
-_PLUGIN_ICON_B64 = "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"
 
 
 def ensure_plugin_icon():
@@ -654,10 +750,6 @@ def ensure_plugin_icon():
     try:
         if os.path.isfile(BRAND_ICON_PATH) and os.path.getsize(BRAND_ICON_PATH) > 0:
             _install_menu_icon(BRAND_ICON_PATH)
-        elif not os.path.isfile(PLUGIN_ICON):
-            with open(PLUGIN_ICON, "wb") as icon_file:
-                icon_file.write(base64.b64decode(_PLUGIN_ICON_B64))
-            os.chmod(PLUGIN_ICON, 0o644)
         if not os.path.isfile(BRAND_BANNER_PATH) or not os.path.isfile(BRAND_ICON_PATH):
             threading.Thread(target=sync_brand_assets, daemon=True).start()
     except Exception as error:
@@ -666,6 +758,7 @@ def ensure_plugin_icon():
 
 def Plugins(**kwargs):
     ensure_plugin_icon()
+    threading.Thread(target=auto_update_web, daemon=True).start()
     return [PluginDescriptor(name="Online4Tech Control Center",
                              description="بوابة لوحة Online4Tech: فتح وقفل ومتابعة IP والبورت %d" % PORT,
                              where=PluginDescriptor.WHERE_PLUGINMENU,

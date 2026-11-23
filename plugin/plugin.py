@@ -13,8 +13,7 @@ from Plugins.Plugin import PluginDescriptor
 from Screens.Screen import Screen
 from Components.ActionMap import ActionMap
 from Components.Label import Label
-from Components.Pixmap import Pixmap
-from enigma import ePicLoad, eTimer
+from enigma import eTimer
 
 PLUGIN_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(PLUGIN_DIR, "assets")
@@ -23,9 +22,9 @@ PORT = 7070
 PID_FILE = "/tmp/online_web_control.pid"
 
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/online4tech/webcontrol1/main/"
-BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t-main-logo.png"
+BRAND_BANNER_URL = GITHUB_RAW_BASE + "assets/o4t-logo-plugin.png"
 BRAND_ICON_URL = GITHUB_RAW_BASE + "assets/o4t-icon.png"
-BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "o4t-main-logo.png")
+BRAND_BANNER_PATH = os.path.join(ASSETS_DIR, "o4t-logo-plugin.png")
 BRAND_ICON_PATH = os.path.join(ASSETS_DIR, "o4t-icon.png")
 PLUGIN_ICON = os.path.join(PLUGIN_DIR, "plugin.png")
 BRAND_SYNC_FLAG = os.path.join(ASSETS_DIR, ".o4t_brand_v2")
@@ -202,6 +201,7 @@ def update_plugin(session):
         "__init__.py": "plugin/__init__.py",
         "VERSION": "VERSION",
         "assets/o4t-main-logo.png": "assets/o4t-main-logo.png",
+        "assets/o4t-logo-plugin.png": "assets/o4t-logo-plugin.png",
         "assets/o4t-icon.png": "assets/o4t-icon.png",
     }
     temp_dir = None
@@ -291,10 +291,6 @@ def update_plugin(session):
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# ---------------------------------------------------------------------------
-# Gate screen: shows OPEN / CLOSED state of the web panel, with IP and port.
-# GREEN = open (start), RED = close (stop), YELLOW = update, OK = refresh.
-# ---------------------------------------------------------------------------
 DEBUG_LOG = "/tmp/owc_debug.log"
 
 
@@ -308,71 +304,171 @@ def _dbg(where):
         pass
 
 
+# ---------------------------------------------------------------------------
+# Glass-style UI helpers. Enigma2 cannot blur, so "glass" is built from layered
+# semi-transparent labels: soft top highlight, bright top edge, bottom shade and
+# a thin light border. Layers: bg=0, panels=1, colored widgets=2, glass=3, text=4.
+# ---------------------------------------------------------------------------
+def _lbl(x, y, w, h, color, z):
+    return '<eLabel position="%d,%d" size="%d,%d" backgroundColor="%s" zPosition="%d" />\n' % (x, y, w, h, color, z)
+
+
+def _glass(x, y, w, h):
+    out = _lbl(x + 1, y + 1, w - 2, min(h // 2, 52), "#22FFFFFF", 3)   # soft top highlight
+    out += _lbl(x + 2, y + 1, w - 4, 2, "#88FFFFFF", 3)            # bright top edge
+    out += _lbl(x + 1, y + h - 4, w - 2, 3, "#55000000", 3)        # bottom shade
+    out += _lbl(x, y, w, 1, "#55FFFFFF", 3)                        # border
+    out += _lbl(x, y + h - 1, w, 1, "#33FFFFFF", 3)
+    out += _lbl(x, y, 1, h, "#44FFFFFF", 3)
+    out += _lbl(x + w - 1, y, 1, h, "#44FFFFFF", 3)
+    return out
+
+
+def _panel(x, y, w, h, color="#CC10263F"):
+    return _lbl(x, y, w, h, color, 1) + _glass(x, y, w, h)
+
+
+def _txt(name, x, y, w, h, font, color, halign="center", valign="center", z=4, extra=""):
+    return ('<widget name="%s" position="%d,%d" size="%d,%d" font="Regular;%d" halign="%s" valign="%s" '
+            'foregroundColor="%s" transparent="1" zPosition="%d" %s />\n') % (
+                name, x, y, w, h, font, halign, valign, color, z, extra)
+
+
+def _btn(name, x, y, w, h, font, fg, bg):
+    return ('<widget name="%s" position="%d,%d" size="%d,%d" font="Regular;%d" halign="center" valign="center" '
+            'foregroundColor="%s" backgroundColor="%s" zPosition="2" />\n') % (name, x, y, w, h, font, fg, bg)
+
+
+LOGO_OK = os.path.isfile(BRAND_BANNER_PATH) and os.path.getsize(BRAND_BANNER_PATH) > 0
+
+
+def _logo_block():
+    """Official logo (330x108) centered in the 764px header, or a text fallback."""
+    if LOGO_OK:
+        return ('<ePixmap position="235,25" size="330,108" pixmap="%s" alphatest="blend" zPosition="4" />\n'
+                % BRAND_BANNER_PATH)
+    return (_txt("brand", 45, 40, 710, 50, 34, "#FFFFFF") +
+            _txt("tagline", 45, 92, 710, 34, 22, "#42D7FF"))
+
+
+def _frame(title):
+    s = '<screen name="%s" position="center,center" size="800,600" title="Online4Tech Web Gate" flags="wfNoBorder" backgroundColor="#050F1E">\n' % title
+    s += _lbl(0, 0, 800, 600, "#050F1E", 0)
+    for i, a in enumerate(("40", "34", "28", "1E", "14", "0A")):      # soft top glow (stepped fade)
+        s += _lbl(0, 5 + i * 50, 800, 50, "#%s1B5A94" % a, 0)
+    s += _lbl(0, 0, 400, 5, "#00C8F0", 1) + _lbl(400, 0, 400, 5, "#1E88E5", 1)
+    s += _lbl(0, 593, 400, 7, "#1E88E5", 1) + _lbl(400, 593, 400, 7, "#00C8F0", 1)
+    s += _panel(18, 14, 764, 134)                                  # header
+    s += _logo_block()
+    return s
+
+
+def _main_skin():
+    s = _frame("OnlineWebControlScreen")
+    s += _txt("role", 28, 152, 744, 28, 17, "#42D7FF")
+    # status card
+    s += _btn("card_open", 28, 186, 744, 82, 20, "#FFFFFF", "#0E8F63")
+    s += _btn("card_closed", 28, 186, 744, 82, 20, "#FFFFFF", "#B5233F")
+    s += _btn("card_wait", 28, 186, 744, 82, 20, "#FFFFFF", "#9A6B00")
+    s += _glass(28, 186, 744, 82)
+    s += _txt("card_title", 28, 190, 744, 44, 32, "#FFFFFF")
+    s += _txt("card_sub", 28, 236, 744, 28, 16, "#E8F6FF")
+    # IP / PORT
+    s += _panel(28, 278, 364, 70) + _panel(408, 278, 364, 70)
+    s += _txt("ip_label", 38, 282, 344, 20, 14, "#83B6D8")
+    s += _txt("ip_value", 38, 302, 344, 42, 30, "#FFFFFF")
+    s += _txt("port_label", 418, 282, 344, 20, 14, "#83B6D8")
+    s += _txt("port_value", 418, 302, 344, 42, 30, "#55D7FF")
+    # URL
+    s += _panel(28, 358, 744, 50, "#CC0A1C30")
+    s += _txt("url", 38, 362, 724, 42, 26, "#D7EAF8")
+    # gate buttons
+    s += _btn("green", 28, 422, 364, 80, 28, "#FFFFFF", "#10A875")
+    s += _btn("green_off", 28, 422, 364, 80, 24, "#6F9A8C", "#0C3A2E")
+    s += _btn("red", 408, 422, 364, 80, 28, "#FFFFFF", "#D52C55")
+    s += _btn("red_off", 408, 422, 364, 80, 24, "#A07582", "#40161F")
+    s += _glass(28, 422, 364, 80) + _glass(408, 422, 364, 80)
+    s += _txt("hint", 30, 512, 740, 28, 16, "#9DBFD8")
+    s += _txt("footer", 30, 562, 740, 24, 13, "#4E7899")
+    return s + "</screen>"
+
+
+def _help_skin():
+    s = _frame("OnlineWebControlHelp")
+    s += _panel(18, 156, 764, 360, "#CC0A1C30")
+    s += _txt("h1", 38, 164, 724, 34, 24, "#42D7FF", halign="right")
+    s += _txt("b1", 38, 200, 724, 100, 20, "#FFFFFF", halign="right", valign="top")
+    s += _txt("h2", 38, 306, 724, 34, 24, "#42D7FF", halign="right")
+    s += _txt("b2", 38, 342, 724, 100, 20, "#FFFFFF", halign="right", valign="top")
+    s += _txt("note", 38, 450, 724, 56, 17, "#9DBFD8", halign="right", valign="top")
+    s += _txt("hint", 30, 528, 740, 28, 17, "#9DBFD8")
+    s += _txt("footer", 30, 562, 740, 24, 13, "#4E7899")
+    return s + "</screen>"
+
+
+# ---------------------------------------------------------------------------
+# States of the gate
+# ---------------------------------------------------------------------------
 STATE_CLOSED, STATE_OPEN, STATE_OPENING, STATE_CLOSING = 0, 1, 2, 3
 POLL_MS = 500
 AUTO_REFRESH_MS = 2000
 WAIT_OPEN_TICKS = 20    # 20 x 0.5s = 10 seconds to wait for the port to open
 WAIT_CLOSE_TICKS = 10   # 10 x 0.5s = 5 seconds to wait for the port to close
 
+HELP_H1 = "ما هو دور البلجن؟"
+HELP_B1 = ("•  هو «بوابة» لوحة تحكم Online4Tech على الرسيفر.\n"
+           "•  لما تفتح البوابة تقدر تدخل اللوحة من الموبايل أو الكمبيوتر.\n"
+           "•  لما تقفلها اللوحة بتتوقف ومحدش يقدر يدخل عليها.")
+HELP_H2 = "طريقة التشغيل"
+HELP_B2 = ("أولًا:  اضغط الأخضر لفتح البوابة وانتظر لحد ما الكارت يبقى أخضر.\n"
+           "ثانيًا:  من الموبايل أو الكمبيوتر على نفس الشبكة افتح الرابط الظاهر.\n"
+           "ثالثًا:  لما تخلص اضغط الأحمر لقفل البوابة.")
+HELP_NOTE = ("الأصفر: تحديث البلجن من GitHub   •   OK: فحص الحالة   •   EXIT: خروج\n"
+             "مهم: الموبايل لازم يبقى على نفس شبكة الواي فاي بتاعة الرسيفر.")
+
+
+class OnlineWebControlHelp(Screen):
+    skin = _help_skin()
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        if not LOGO_OK:
+            self["brand"] = Label("Online4Tech Web Gate")
+            self["tagline"] = Label("خليك دايمًا أونلاين")
+        self["h1"] = Label(HELP_H1)
+        self["b1"] = Label(HELP_B1)
+        self["h2"] = Label(HELP_H2)
+        self["b2"] = Label(HELP_B2)
+        self["note"] = Label(HELP_NOTE)
+        self["hint"] = Label("اضغط أي زرار للرجوع")
+        self["footer"] = Label("ONLINE4TECH  •  VERSION %s" % (VERSION or "N/A"))
+        self["actions"] = ActionMap(
+            ["ColorActions", "OkCancelActions"],
+            {"ok": self.close, "cancel": self.close, "green": self.close,
+             "red": self.close, "yellow": self.close, "blue": self.close},
+            -1
+        )
+
 
 class OnlineWebControlScreen(Screen):
-    skin = """
-    <screen name="OnlineWebControlScreen" position="center,center" size="800,600"
-        title="Online4Tech Web Gate" flags="wfNoBorder" backgroundColor="#061426">
-        <eLabel zPosition="0" position="0,0" size="800,600" backgroundColor="#061426" />
-        <eLabel zPosition="1" position="0,0" size="800,5" backgroundColor="#00C8F0" />
-        <eLabel zPosition="1" position="0,593" size="800,7" backgroundColor="#087EBA" />
-
-        <!-- Header -->
-        <eLabel zPosition="1" position="18,17" size="764,110" backgroundColor="#0B2038" />
-        <widget zPosition="2" name="banner" position="112,22" size="576,100" alphatest="blend" />
-        <widget zPosition="2" name="brand" position="45,35" size="710,45" font="Regular;32" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0B2038" />
-        <widget zPosition="2" name="tagline" position="45,82" size="710,30" font="Regular;20" halign="center" valign="center" foregroundColor="#42D7FF" backgroundColor="#0B2038" />
-
-        <!-- Gate status card (only one of the four is visible at a time) -->
-        <widget zPosition="2" name="card_open" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#0E8F63" />
-        <widget zPosition="2" name="card_closed" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#B5233F" />
-        <widget zPosition="2" name="card_wait" position="28,142" size="744,96" font="Regular;34" halign="center" valign="center" foregroundColor="#152238" backgroundColor="#E8B323" />
-        <widget zPosition="2" name="card_sub" position="28,208" size="744,28" font="Regular;17" halign="center" valign="center" foregroundColor="#FFFFFF" transparent="1" />
-
-        <!-- IP / Port -->
-        <eLabel zPosition="1" position="28,252" size="364,70" backgroundColor="#123654" />
-        <eLabel zPosition="1" position="408,252" size="364,70" backgroundColor="#123654" />
-        <widget zPosition="2" name="ip_label" position="38,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget zPosition="2" name="ip_value" position="38,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#123654" />
-        <widget zPosition="2" name="port_label" position="418,256" size="344,22" font="Regular;15" halign="center" valign="center" foregroundColor="#83B6D8" backgroundColor="#123654" />
-        <widget zPosition="2" name="port_value" position="418,278" size="344,38" font="Regular;30" halign="center" valign="center" foregroundColor="#55D7FF" backgroundColor="#123654" />
-
-        <!-- Full URL -->
-        <eLabel zPosition="1" position="28,336" size="744,52" backgroundColor="#0A1C30" />
-        <widget zPosition="2" name="url" position="38,340" size="724,44" font="Regular;26" halign="center" valign="center" foregroundColor="#D7EAF8" backgroundColor="#0A1C30" />
-
-        <!-- Gate buttons: bright when usable, dim when not applicable -->
-        <widget zPosition="2" name="green" position="28,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#10A875" />
-        <widget zPosition="2" name="green_off" position="28,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#6F9A8C" backgroundColor="#0C3A2E" />
-        <widget zPosition="2" name="red" position="408,410" size="364,86" font="Regular;28" halign="center" valign="center" foregroundColor="#FFFFFF" backgroundColor="#D52C55" />
-        <widget zPosition="2" name="red_off" position="408,410" size="364,86" font="Regular;24" halign="center" valign="center" foregroundColor="#A07582" backgroundColor="#40161F" />
-
-        <widget zPosition="2" name="hint" position="30,512" size="740,28" font="Regular;16" halign="center" valign="center" foregroundColor="#9DBFD8" backgroundColor="#061426" />
-        <widget zPosition="2" name="footer" position="30,560" size="740,24" font="Regular;13" halign="center" valign="center" foregroundColor="#4E7899" backgroundColor="#061426" />
-    </screen>
-    """
+    skin = _main_skin()
 
     def __init__(self, session):
         Screen.__init__(self, session)
         self.session = session
         self.state = STATE_CLOSED
         self.ticks = 0
-        self.target_open = None
 
-        self["banner"] = Pixmap()
-        self["brand"] = Label("Online4Tech Web Gate")
-        self["tagline"] = Label("خليك دايمًا أونلاين")
-        self["card_open"] = Label("●  البوابة مفتوحة")
-        self["card_closed"] = Label("●  البوابة مقفولة")
+        if not LOGO_OK:
+            self["brand"] = Label("Online4Tech Web Gate")
+            self["tagline"] = Label("خليك دايمًا أونلاين")
+        self["role"] = Label("بوابة التحكم في لوحة الويب  •  افتح أو اقفل الدخول عليها بضغطة زرار")
+        self["card_open"] = Label("")
+        self["card_closed"] = Label("")
         self["card_wait"] = Label("")
+        self["card_title"] = Label("")
         self["card_sub"] = Label("")
-        self["ip_label"] = Label("IP الرسيفر")
+        self["ip_label"] = Label("IP ADDRESS")
         self["ip_value"] = Label("")
         self["port_label"] = Label("PORT")
         self["port_value"] = Label(str(PORT))
@@ -389,19 +485,12 @@ class OnlineWebControlScreen(Screen):
                 "green": self.do_open,
                 "red": self.do_close,
                 "yellow": self.do_update,
+                "blue": self.show_help,
                 "ok": self.refresh_status,
                 "cancel": self.close,
             },
             -1
         )
-
-        # Banner loader
-        self.picload = ePicLoad()
-        self.picload_conn = None
-        try:
-            self.picload_conn = self.picload.PictureData.connect(self._on_banner_decoded)
-        except AttributeError:
-            self.picload.PictureData.get().append(self._on_banner_decoded)
 
         # One timer: polls while opening/closing, and auto-refreshes while idle
         self.timer = eTimer()
@@ -417,7 +506,6 @@ class OnlineWebControlScreen(Screen):
     # ---- lifecycle -------------------------------------------------------
     def _on_layout(self):
         try:
-            self._load_banner()
             self.refresh_status()
             self.timer.start(AUTO_REFRESH_MS, True)
         except Exception:
@@ -429,31 +517,6 @@ class OnlineWebControlScreen(Screen):
         except Exception:
             pass
 
-    # ---- banner ----------------------------------------------------------
-    def _load_banner(self):
-        try:
-            self["banner"].hide()
-            if not os.path.isfile(BRAND_BANNER_PATH) or os.path.getsize(BRAND_BANNER_PATH) == 0:
-                threading.Thread(target=sync_brand_assets, daemon=True).start()
-                return
-            w = self["banner"].instance.size().width()
-            h = self["banner"].instance.size().height()
-            self.picload.setPara((w, h, 1, 1, False, 1, "#0B2038"))
-            self.picload.startDecode(BRAND_BANNER_PATH)
-        except Exception as error:
-            print("[OnlineWebControl] Banner load error: %s" % error)
-
-    def _on_banner_decoded(self, picInfo=None):
-        try:
-            ptr = self.picload.getData()
-            if ptr is not None:
-                self["banner"].instance.setPixmap(ptr)
-                self["banner"].show()
-                self["brand"].hide()
-                self["tagline"].hide()
-        except Exception as error:
-            print("[OnlineWebControl] Banner render error: %s" % error)
-
     # ---- state handling --------------------------------------------------
     def _set_state(self, state):
         self.state = state
@@ -462,37 +525,41 @@ class OnlineWebControlScreen(Screen):
         self["ip_value"].setText(ip)
         self["port_value"].setText(str(PORT))
 
-        for name in ("card_open", "card_closed", "card_wait"):
-            self[name].hide()
-        for name in ("green", "green_off", "red", "red_off"):
+        for name in ("card_open", "card_closed", "card_wait",
+                     "green", "green_off", "red", "red_off"):
             self[name].hide()
 
         if state == STATE_OPEN:
             self["card_open"].show()
+            self["card_title"].setText("●  البوابة مفتوحة")
             self["card_sub"].setText("اللوحة شغالة وجاهزة للدخول من أي جهاز على نفس الشبكة")
             self["url"].setText(url)
+            self["green_off"].setText("مفتوحة بالفعل")
             self["green_off"].show()
             self["red"].show()
-            self["hint"].setText("الأحمر: قفل البوابة   •   الأصفر: تحديث   •   OK: فحص الحالة")
+            self["hint"].setText("الأحمر: قفل البوابة   •   الأصفر: تحديث   •   الأزرق: شرح البلجن")
         elif state == STATE_CLOSED:
             self["card_closed"].show()
+            self["card_title"].setText("●  البوابة مقفولة")
             self["card_sub"].setText("اللوحة متوقفة ومفيش دخول عليها")
             self["url"].setText("اللوحة مقفولة  —  اضغط الأخضر للفتح")
+            self["red_off"].setText("مقفولة بالفعل")
             self["green"].show()
             self["red_off"].show()
-            self["hint"].setText("الأخضر: فتح البوابة   •   الأصفر: تحديث   •   OK: فحص الحالة")
+            self["hint"].setText("الأخضر: فتح البوابة   •   الأصفر: تحديث   •   الأزرق: شرح البلجن")
         elif state == STATE_OPENING:
-            self["card_wait"].setText("◌  جاري الفتح ...")
             self["card_wait"].show()
+            self["card_title"].setText("◌  جاري الفتح ...")
             self["card_sub"].setText("")
             self["url"].setText(url)
             self["green_off"].setText("جاري الفتح ...")
             self["green_off"].show()
+            self["red_off"].setText("مقفولة بالفعل")
             self["red_off"].show()
             self["hint"].setText("استنى لحظات لحد ما البورت يفتح")
         elif state == STATE_CLOSING:
-            self["card_wait"].setText("◌  جاري القفل ...")
             self["card_wait"].show()
+            self["card_title"].setText("◌  جاري القفل ...")
             self["card_sub"].setText("")
             self["url"].setText(url)
             self["green_off"].setText("مفتوحة بالفعل")
@@ -500,15 +567,14 @@ class OnlineWebControlScreen(Screen):
             self["red_off"].setText("جاري القفل ...")
             self["red_off"].show()
             self["hint"].setText("استنى لحظات لحد ما البورت يتقفل")
-        if state != STATE_CLOSING:
-            self["red_off"].setText("مقفولة بالفعل")
-        if state != STATE_OPENING:
-            self["green_off"].setText("مفتوحة بالفعل")
 
     def refresh_status(self):
         if self.state in (STATE_OPENING, STATE_CLOSING):
             return
-        self._set_state(STATE_OPEN if is_running() else STATE_CLOSED)
+        try:
+            self._set_state(STATE_OPEN if is_running() else STATE_CLOSED)
+        except Exception:
+            _dbg("refresh_status")
 
     def _on_tick(self):
         try:
@@ -564,6 +630,12 @@ class OnlineWebControlScreen(Screen):
             return
         _show_result(self.session, "جاري الاتصال بمستودع GitHub وسحب آخر تحديثات Online4Tech...", timeout=3)
         update_plugin(self.session)
+
+    def show_help(self):
+        try:
+            self.session.open(OnlineWebControlHelp)
+        except Exception:
+            _dbg("show_help")
 
 
 def main(session, **kwargs):
